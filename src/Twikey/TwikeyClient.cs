@@ -47,8 +47,7 @@ namespace Twikey
 
         protected string GetSessionToken()
         {
-            long systemCurrentTimeMillis = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
-            if ((systemCurrentTimeMillis - _lastLogin) > s_maxSessionAge)
+            if ((System.CurrentTimeMillis() - _lastLogin) > s_maxSessionAge)
             {
                 HttpRequestMessage request = new HttpRequestMessage();
                 request.RequestUri = new Uri(_endpoint);
@@ -70,17 +69,29 @@ namespace Twikey
                 try
                 {
                     _sessionToken = response.Headers.GetValues("Authorization").First<string>();
-                    _lastLogin = (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+                    _lastLogin = System.CurrentTimeMillis();
                 }
                 catch (ArgumentNullException ignore)
                 {
-                    _lastLogin = 0;
+                    _lastLogin = 0L;
                     throw new UnauthenticatesException();
                 }
 
             }
 
             return _sessionToken;
+        }
+
+        public static long GenerateOtp(string salt, string privateKey)
+        {
+            if (privateKey is null)
+                throw new ArgumentNullException("Invalid key");
+
+            long counter = (long) Math.Floor((double) System.CurrentTimeMillis()/30000);
+            byte[] key; //TODO Continue
+
+
+            return 0L;
         }
 
         public class UserException : Exception
@@ -94,5 +105,13 @@ namespace Twikey
         }
 
 
+    }
+
+    public static class System
+    {
+        public static long CurrentTimeMillis()
+        {
+            return (long)(DateTime.UtcNow - new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+        }
     }
 }
