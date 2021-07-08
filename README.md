@@ -24,6 +24,7 @@ To use the Twikey API client, the following things are required:
 ## Installation ##
 
 TODO
+https://docs.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices
 
 ## How to create anything ##
 
