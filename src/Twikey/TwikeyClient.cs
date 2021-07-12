@@ -12,7 +12,7 @@ namespace Twikey
     public class TwikeyClient
     {
         //private static readonly string s_Utf8 = "UTF-8";
-        private static readonly string s_defaultUserHeader = "twikey/.net-1.0";
+        private static readonly string s_defaultUserHeader = "twikey/.net-0.1.0";
         private static readonly string s_prodEnvironment = "https://api.twikey.com/creditor";
         private static readonly string s_testEnvironment = "https://api.beta.twikey.com/creditor";
         private static readonly long s_maxSessionAge = 23 * 60 * 60 * 60; // max 1day, but use 23 to be safe
@@ -23,9 +23,10 @@ namespace Twikey
         private long _lastLogin;
         private string _sessionToken;
         private string _privateKey;
-        private readonly DocumentGateway _documentGateway;
-        public string UserAgent { get; private set; }
+
         public static readonly string FORM_URL = "application/x-www-form-urlencoded";
+        public string UserAgent { get; private set; }
+        public DocumentGateway Document { get; }
 
         /// <param name="apiKey">API key</param>
         /// <param name="test">Use the test environment</param>
@@ -34,7 +35,7 @@ namespace Twikey
             _apiKey = apiKey;
             _endpoint = test ? s_testEnvironment : s_prodEnvironment;
             UserAgent = s_defaultUserHeader;
-            _documentGateway = new DocumentGateway(this);
+            Document = new DocumentGateway(this);
 
         }
 
@@ -61,8 +62,7 @@ namespace Twikey
                 request.RequestUri = new Uri(_endpoint);
                 request.Method = HttpMethod.Post;
                 request.Headers.Add("User-Agent", UserAgent);
-                request.Headers.Add("Content-Type", FORM_URL);
-
+                
                 Dictionary<string, string> parameters = new Dictionary<string, string>() { { "apiToken", _apiKey } };
                 if (_privateKey != null)
                 {
@@ -109,8 +109,6 @@ namespace Twikey
             return new Uri(String.Format("{0}{1}", _endpoint, path));
 
         }
-
-        //TODO Gateways
 
         public class UserException : Exception
         {
