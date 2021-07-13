@@ -1,9 +1,12 @@
 using Twikey.Modal;
+using Twikey.Callback;
 using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using System.Json;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.IO;
 
 namespace Twikey
 {
@@ -37,9 +40,9 @@ namespace Twikey
         /// <param name="customer">Customer details</param>
         /// <param name="mandateDetails">Map containing any of the parameters in the above table</param>
         /// <exception cref="IOException">When no connection could be made</exception>
-        /// <exception cref="com.twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         /// <returns>Url to redirect the customer to or to send in an email</returns>
-        public JsonValue Create(long ct, Customer customer, Dictionary<string, string> mandateDetails)
+        public JObject Create(long ct, Customer customer, Dictionary<string, string> mandateDetails)
         {
             Dictionary<string, string> parameters = new Dictionary<string, string>(mandateDetails);
             parameters.Add("ct", ct.ToString());
@@ -71,16 +74,77 @@ namespace Twikey
 
             request.Content = new FormUrlEncodedContent(parameters);
             HttpResponseMessage response = _twikeyClient.Send(request);
-    
-            if(response.StatusCode == System.Net.HttpStatusCode.OK){
-                return JsonValue.Load(response.Content.ReadAsStreamAsync().Result);
-            }else{
-                String apiError = response.Headers.GetValues("ApiError").First<string>();
-                throw new TwikeyClient.UserException(apiError);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+                {
+                    return JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
+                }
             }
 
+            String apiError = response.Headers.GetValues("ApiError").First<string>();
+            throw new TwikeyClient.UserException(apiError);
 
         }
+
+
+        /// Get updates about all mandates (new/updated/cancelled)
+        /// <param name="mandateCallback">Callback for every change</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public void Feed(DocumentCallback mandateCallback)
+        {
+            Uri myUrl = _twikeyClient.GetUrl("/mandate");
+            bool isEmpty;
+            do
+            {
+                HttpRequestMessage request = new HttpRequestMessage();
+                request.RequestUri = myUrl;
+                request.Method = HttpMethod.Get;
+                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+
+                HttpResponseMessage response = _twikeyClient.Send(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+                    {
+                        JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
+                        JArray messagesArr = JArray.FromObject(json["Messages"]);
+                        isEmpty = messagesArr.Count == 0;
+                        if (!isEmpty)
+                        {
+                            for (int i = 0; i < messagesArr.Count; i++)
+                            {
+                                JObject obj = (JObject)messagesArr[i];
+                                if (obj.ContainsKey("CxlRsn"))
+                                {
+                                    mandateCallback.CancelledDocument(obj);
+                                }
+                                else if (obj.ContainsKey("AmdmntRsn"))
+                                {
+                                    mandateCallback.UpdatedDocument(obj);
+                                }
+                                else
+                                {
+                                    mandateCallback.NewDocument(obj);
+                                }
+                            }
+                        }
+                    }
+
+                }
+                else
+                {
+                    String apiError = response.Headers.GetValues("ApiError").First<string>();
+                    throw new TwikeyClient.UserException(apiError);
+                }
+            } while (!isEmpty);
+
+        }
+
+
     }
 
 }

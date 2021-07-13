@@ -1,6 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Twikey;
 using Twikey.Modal;
+using TwikeyAPITests.Callback;
 using System;
 using System.Collections.Generic;
 
@@ -42,9 +43,61 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            Console.WriteLine(_api.Document.Create(_ct, null, new Dictionary<string, string>()).ToString());
+            Console.WriteLine(_api.Document.Create(_ct, null, new Dictionary<string, string>()));
         }
 
+
+        [TestMethod]
+        public void TestInviteMandateCustomerDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Console.WriteLine(_api.Document.Create(_ct, _customer, new Dictionary<string, string>()));
+        }
+
+        [TestMethod]
+        public void TestCreateInvoice()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Dictionary<string, string> invoiceDetails = new Dictionary<string, string>();
+            invoiceDetails.Add("number", "Invss123");
+            invoiceDetails.Add("title", "Invoice April");
+            invoiceDetails.Add("remittance", "123456789123");
+            invoiceDetails.Add("amount", "10.90");
+            invoiceDetails.Add("date", "2020-03-20");
+            invoiceDetails.Add("duedate", "2020-04-28");
+            Console.WriteLine(_api.Invoice.Create(_ct, _customer, invoiceDetails));
+        }
+
+        [TestMethod]
+        public void GetMandatesAndDetails(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Document.Feed(new DocumentCallbackImpl());
+  
+        }
+
+        
+        [TestMethod]
+        public void GetInvoiceAndDetails(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Invoice.Feed(new InvoiceCallbackImpl());
+  
+        }
 
         [TestMethod]
         public void VerifySignatureAndDecryptAccountInfo()
@@ -67,5 +120,6 @@ namespace TwikeyAPITests
             Assert.AreEqual("BE08001166979213", ibanAndBic[0]);
             Assert.AreEqual("GEBABEBB", ibanAndBic[1]);
         }
+
     }
 }

@@ -25,8 +25,10 @@ namespace Twikey
         private string _privateKey;
 
         public static readonly string FORM_URL = "application/x-www-form-urlencoded";
+        public static readonly string JSON = "application/json";
         public string UserAgent { get; private set; }
         public DocumentGateway Document { get; }
+        public InvoiceGateway Invoice { get; }
 
         /// <param name="apiKey">API key</param>
         /// <param name="test">Use the test environment</param>
@@ -36,6 +38,7 @@ namespace Twikey
             _endpoint = test ? s_testEnvironment : s_prodEnvironment;
             UserAgent = s_defaultUserHeader;
             Document = new DocumentGateway(this);
+            Invoice = new InvoiceGateway(this);
 
         }
 
@@ -45,6 +48,7 @@ namespace Twikey
         public TwikeyClient WithUserAgent(string userAgent)
         {
             UserAgent = userAgent;
+            //s_client.DefaultRequestHeaders.Add("User-Agent",userAgent);
             return this;
         }
 
@@ -62,7 +66,7 @@ namespace Twikey
                 request.RequestUri = new Uri(_endpoint);
                 request.Method = HttpMethod.Post;
                 request.Headers.Add("User-Agent", UserAgent);
-                
+
                 Dictionary<string, string> parameters = new Dictionary<string, string>() { { "apiToken", _apiKey } };
                 if (_privateKey != null)
                 {
@@ -77,7 +81,7 @@ namespace Twikey
                     _sessionToken = response.Headers.GetValues("Authorization").First<string>();
                     _lastLogin = JMethods.CurrentTimeMillis();
                 }
-                catch (ArgumentNullException ignore)
+                catch (Exception ignore)
                 {
                     _lastLogin = 0L;
                     throw new UnauthenticatedException();
@@ -244,7 +248,8 @@ namespace Twikey
             }
         }
 
-        public HttpResponseMessage Send(HttpRequestMessage request){
+        public HttpResponseMessage Send(HttpRequestMessage request)
+        {
             return s_client.SendAsync(request).Result;
         }
     }
