@@ -20,4 +20,4 @@ jobs:
     - name: Build
       run: dotnet build src/Twikey --no-restore; dotnet build src/TwikeyTests --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal src/TwikeyTests
+      run: dotnet test --no-build --logger "console;verbosity=detailed" src/TwikeyTests

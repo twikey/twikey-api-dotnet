@@ -18,7 +18,8 @@ payment options of your favorite PSP to allow other customers to pay as well.
 To use the Twikey API client, the following things are required:
 
 + Get yourself a [Twikey account](https://www.twikey.com).
-+ .NET core >= 3.1.410
++ .NET core >= 3.1.0
++ Newtonsoft.Json >= 13.0.1
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
 ## Installation ##
@@ -56,9 +57,23 @@ Invite a customer to sign a SEPA mandate using a specific behaviour template (ct
 the behaviour or flow that the customer will experience. This 'ct' can be found in the template section of the settings.
 
 ```csharp
+Customer customer = new Customer()
+            {
+                CustomerNumber = "customerNum123",
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000",
+                Country = "BE",
+                Lang = "nl",
+                Mobile = "32412345678"
+            };
+Dictionary<string,string> extraParams = ...;
+long ct = ...; 
 
-TODO
-
+JObject invite = twikeyClient.Document.Create(ct, customer, extraParams); 
 ```
 
 _After creation, the link available in invite['url'] can be used to redirect the customer into the signing flow or even 
@@ -69,6 +84,21 @@ send him a link through any other mechanism. Ideally you store the mandatenumber
 
 Once signed, a webhook is sent (see below) after which you can fetch the detail through the document feed, which you can actually
 think of as reading out a queue. Since it'll return you the changes since the last time you called it.
+
+```csharp
+    //Implement this interface to work with response from Twikey
+    //JObject -> Newtonsoft.Json.Linq
+    public interface DocumentCallback {
+        void NewDocument(JObject newDocument);
+        void UpdatedDocument(JObject updatedDocument);
+        void CancelledDocument(JObject cancelledDocument);
+    }
+
+    twikeyClient.Document.Feed(new DocumentCallbackImpl());
+```
+
+## Invoices
+Create new invoices 
 
 ```csharp
 TODO
