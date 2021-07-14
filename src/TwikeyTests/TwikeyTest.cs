@@ -1,7 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Twikey;
 using Twikey.Modal;
-using TwikeyAPITests.Callback;
+using TwikeyAPITests.TestCallback;
 using System;
 using System.Collections.Generic;
 
@@ -76,6 +76,28 @@ namespace TwikeyAPITests
             Console.WriteLine(_api.Invoice.Create(_ct, _customer, invoiceDetails));
         }
 
+        // [TestMethod]
+        // public void TestCreatePaylink()
+        // {
+        //     if (_apiKey == null)
+        //     {
+        //         Assert.Inconclusive("apiKey is null");
+        //         return;
+        //     }
+        //     Console.WriteLine(_api.Paylink.Create(_ct, _customer, new Dictionary<string, string>()));
+        // }
+
+        // [TestMethod]
+        // public void TestCreateTransaction()
+        // {
+        //     if (_apiKey == null)
+        //     {
+        //         Assert.Inconclusive("apiKey is null");
+        //         return;
+        //     }
+        //     Console.WriteLine(_api.Transaction.Create(null, new Dictionary<string, string>()));
+        // }
+
         [TestMethod]
         public void GetMandatesAndDetails(){
             if (_apiKey == null)
@@ -96,6 +118,27 @@ namespace TwikeyAPITests
                 return;
             }
             _api.Invoice.Feed(new InvoiceCallbackImpl());
+        }
+
+        [TestMethod]
+        public void GetPaylinkAndDetails(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Paylink.Feed(new PaylinkCallbackImpl());
+  
+        }
+
+        [TestMethod]
+        public void GetTransactionAndDetails(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Transaction.Feed(new TransactionCallbackImpl());
   
         }
 

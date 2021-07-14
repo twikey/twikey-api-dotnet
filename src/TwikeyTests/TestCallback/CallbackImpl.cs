@@ -1,10 +1,10 @@
-using Twikey.Callback;
+using Twikey.ICallback;
 using Newtonsoft.Json.Linq;
 using System;
 
-namespace TwikeyAPITests.Callback
+namespace TwikeyAPITests.TestCallback
 {
-    public class DocumentCallbackImpl : DocumentCallback
+    public class DocumentCallbackImpl : IDocumentCallback
     {
 
         public void NewDocument(JObject newDocument)
@@ -24,7 +24,7 @@ namespace TwikeyAPITests.Callback
 
     }
 
-    public class InvoiceCallbackImpl : InvoiceCallback
+    public class InvoiceCallbackImpl : IInvoiceCallback
     {
 
         public void Invoice(JObject updatedInvoice)
@@ -34,4 +34,22 @@ namespace TwikeyAPITests.Callback
 
     }
 
+    public class PaylinkCallbackImpl : IPaylinkCallback
+    {
+
+        public void Paylink(JObject paylink)
+        {
+            Console.WriteLine("Paylink : " + paylink);
+        }
+
+    }
+    public class TransactionCallbackImpl : ITransactionCallback
+    {
+
+        public void Transaction(JObject transaction)
+        {
+            Console.WriteLine("Transaction: " + transaction);
+        }
+
+    }
 }
