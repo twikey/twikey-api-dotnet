@@ -6,100 +6,98 @@ using System.Net.Http;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
-using System.Text;
 using System.IO;
 
 namespace Twikey
 {
-    public class InvoiceGateway
+    public class PaylinkGateway
     {
         private readonly TwikeyClient _twikeyClient;
 
-        protected internal InvoiceGateway(TwikeyClient twikeyClient)
+        protected internal PaylinkGateway(TwikeyClient twikeyClient)
         {
             _twikeyClient = twikeyClient;
         }
 
+        /*
+         * <ul>
+         * <li>title	Message to the debtor [*1]	Yes	string (200)</li>
+         * <li>remittance	Payment message, if empty then title will be used [*2]	No	string</li>
+         * <li>amount	Amount to be billed	Yes	string</li>
+         * <li>redirectUrl	Optional redirect after pay url (must use http(s)://)	No	url</li>
+         * <li>place	Optional place	No	string</li>
+         * <li>expiry	Optional expiration date	No	date</li>
+         * <li>sendInvite	Send out invite email or sms directly (email, sms)	No	string</li>
+         * <li>method	Circumvents the payment selection with PSP (bancontact/ideal/maestro/mastercard/visa/inghomepay/kbc/belfius)	No	string</li>
+         * <li>invoice	create payment link for specific invoice number	No	string</li>
+         * </ul>
+        */
         /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         /// <param name="customer">Customer details</param>
-        /// <param name="invoiceDetails">Details specific to the invoice</param>
-        /// <returns>jsonobject {
-        //                       "id": "fec44175-b4fe-414c-92aa-9d0a7dd0dbf2",
-        //                       "number": "Inv20200001",
-        //                       "title": "Invoice July",
-        //                       "ct": 1988,
-        //                       "amount": "100.00",
-        //                       "date": "2020-01-31",
-        //                       "duedate": "2020-02-28",
-        //                       "status": "BOOKED",
-        //                       "url": "https://yourpage.beta.twikey.com/invoice.html?fec44175-b4fe-414c-92aa-9d0a7dd0dbf2"
-        //                     }
-        /// </returns>
+        /// <param name="mandateDetails">Map containing any of the parameters in the above table</param>
         /// <exception cref="IOException">When no connection could be made</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        public JObject Create(long ct, Customer customer, Dictionary<string, string> invoiceDetails)
+        public JObject Create(long ct, Customer customer, Dictionary<string, string> linkDetails)
         {
-            JObject customerAsJson = new JObject(){
-                {"customerNumber",customer.CustomerNumber},
-                {"email", customer.Email},
-                {"firstname", customer.Firstname},
-                {"lastname", customer.Lastname},
-                {"l", customer.Lang},
-                {"address", customer.Street},
-                {"city", customer.City},
-                {"zip", customer.Zip},
-                {"country", customer.Country},
-                {"mobile", customer.Mobile}
-            };
-
-            if (customer.CompanyName != null)
+            Dictionary<string, string> parameters = new Dictionary<string, string>(linkDetails);
+            parameters.Add("ct", ct.ToString());
+            if (customer != null)
             {
-                customerAsJson.Add("companyName", customer.CompanyName);
-                customerAsJson.Add("coc", customer.Coc);
-            }
+                parameters.Add("customerNumber", customer.CustomerNumber);
+                parameters.Add("email", customer.Email);
+                parameters.Add("firstname", customer.Firstname);
+                parameters.Add("lastname", customer.Lastname);
+                parameters.Add("l", customer.Lang);
+                parameters.Add("address", customer.Street);
+                parameters.Add("city", customer.City);
+                parameters.Add("zip", customer.Zip);
+                parameters.Add("country", customer.Country);
+                parameters.Add("mobile", customer.Mobile);
 
-            JObject invoice = new JObject(){
-                {"customer", customerAsJson},
-                {"date", invoiceDetails["date"] != null ? invoiceDetails["date"]: DateTime.Now.ToString()},
-                {"duedate", invoiceDetails["duedate"] != null ? invoiceDetails["date"]: DateTime.Now.AddMonths(1).ToString()},
-                {"ct", ct}
-            };
-
-            foreach (KeyValuePair<string, string> entry in invoiceDetails)
-            {
-                if (!invoice.ContainsKey(entry.Key))
-                    invoice.Add(entry.Key, entry.Value);
+                if (customer.CompanyName != null)
+                {
+                    parameters.Add("companyName", customer.CompanyName);
+                    parameters.Add("coc", customer.Coc);
+                }
             }
 
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = _twikeyClient.GetUrl("/invoice");
+            request.RequestUri = _twikeyClient.GetUrl("/payment/link");
             request.Method = HttpMethod.Post;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
 
-            request.Content = new StringContent(invoice.ToString(), Encoding.UTF8, TwikeyClient.JSON);
+            request.Content = new FormUrlEncodedContent(parameters);
             HttpResponseMessage response = _twikeyClient.Send(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
                 {
+                    /* 
+                       {
+                        "mndtId": "COREREC01",
+                        "url": "http://twikey.to/myComp/ToYG",
+                        "key": "ToYG"
+                       } 
+                    */
                     return JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
                 }
             }
 
             String apiError = response.Headers.GetValues("ApiError").First<string>();
             throw new TwikeyClient.UserException(apiError);
+
         }
 
 
-        // Get updates about all invoices (new/updated/cancelled)
-        /// <param name="invoiceCallback">Callback for every change</param>
+        /// Get updates about all links
+        /// <param name="paylinkCallback">Callback for every change</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(IInvoiceCallback invoiceCallback)
+        public void Feed(IPaylinkCallback paylinkCallback)
         {
-            Uri myUrl = _twikeyClient.GetUrl("/invoice");
+            Uri myUrl = _twikeyClient.GetUrl("/payment/link/feed");
             bool isEmpty;
             do
             {
@@ -115,14 +113,14 @@ namespace Twikey
                     using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
                     {
                         JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                        JArray messagesArr = JArray.FromObject(json["Invoices"]);
+                        JArray messagesArr = JArray.FromObject(json["Messages"]);
                         isEmpty = messagesArr.Count == 0;
                         if (!isEmpty)
                         {
                             for (int i = 0; i < messagesArr.Count; i++)
                             {
                                 JObject obj = (JObject)messagesArr[i];
-                                invoiceCallback.Invoice(obj);
+                                paylinkCallback.Paylink(obj);
                             }
                         }
                     }
@@ -138,4 +136,5 @@ namespace Twikey
         }
 
     }
+
 }

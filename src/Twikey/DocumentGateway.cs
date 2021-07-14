@@ -1,5 +1,5 @@
 using Twikey.Modal;
-using Twikey.Callback;
+using Twikey.ICallback;
 using System.Collections.Generic;
 using System;
 using System.Net.Http;
@@ -93,7 +93,7 @@ namespace Twikey
         /// <param name="mandateCallback">Callback for every change</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(DocumentCallback mandateCallback)
+        public void Feed(IDocumentCallback mandateCallback)
         {
             Uri myUrl = _twikeyClient.GetUrl("/mandate");
             bool isEmpty;

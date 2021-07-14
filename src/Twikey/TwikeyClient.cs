@@ -29,6 +29,8 @@ namespace Twikey
         public string UserAgent { get; private set; }
         public DocumentGateway Document { get; }
         public InvoiceGateway Invoice { get; }
+        public PaylinkGateway Paylink { get; }
+        public TransactionGateway Transaction { get; }
 
         /// <param name="apiKey">API key</param>
         /// <param name="test">Use the test environment</param>
@@ -39,7 +41,8 @@ namespace Twikey
             UserAgent = s_defaultUserHeader;
             Document = new DocumentGateway(this);
             Invoice = new InvoiceGateway(this);
-
+            Paylink = new PaylinkGateway(this);
+            Transaction = new TransactionGateway(this);
         }
 
         /// <param name="apiKey"> API key</param>
@@ -90,22 +93,6 @@ namespace Twikey
             }
 
             return _sessionToken;
-        }
-
-        protected static String GetPostDataString(Dictionary<String, String> parameters)
-        {
-            StringBuilder result = new StringBuilder();
-            foreach (KeyValuePair<string, string> entry in parameters)
-            {
-                result.Append(HttpUtility.UrlEncode(entry.Key, Encoding.UTF8))
-                      .Append("=")
-                      .Append(HttpUtility.UrlEncode(entry.Value, Encoding.UTF8))
-                      .Append("&");
-            }
-            if (parameters.Count > 0)
-                result.Remove(result.Length - 1, 1);
-
-            return result.ToString();
         }
 
         public Uri GetUrl(string path)
