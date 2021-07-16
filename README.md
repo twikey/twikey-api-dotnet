@@ -19,7 +19,6 @@ To use the Twikey API client, the following things are required:
 
 + Get yourself a [Twikey account](https://www.twikey.com).
 + .NET core >= 3.1.0
-+ Newtonsoft.Json >= 13.0.1
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
 ## Installation ##
@@ -82,26 +81,91 @@ send him a link through any other mechanism. Ideally you store the mandatenumber
 
 ### Feed
 
-Once signed, a webhook is sent (see below) after which you can fetch the detail through the document feed, which you can actually
-think of as reading out a queue. Since it'll return you the changes since the last time you called it.
 
 ```csharp
-    //Implement this interface to work with response from Twikey
-    //JObject -> Newtonsoft.Json.Linq
-    public interface DocumentCallback {
-        void NewDocument(JObject newDocument);
-        void UpdatedDocument(JObject updatedDocument);
-        void CancelledDocument(JObject cancelledDocument);
-    }
+//Implement this interface to work with response from Twikey
+//JObject -> Newtonsoft.Json.Linq
+public interface DocumentCallback 
+{
+    void NewDocument(JObject newDocument);
+    void UpdatedDocument(JObject updatedDocument);
+    void CancelledDocument(JObject cancelledDocument);
+}
 
-    twikeyClient.Document.Feed(new DocumentCallbackImpl());
+twikeyClient.Document.Feed(new DocumentCallbackImpl());
 ```
 
 ## Invoices
 Create new invoices 
 
 ```csharp
-TODO
+Customer customer = new Customer()
+            {
+                CustomerNumber = "customerNum123",
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000",
+                Country = "BE",
+                Lang = "nl",
+                Mobile = "32412345678"
+            };
+Dictionary<string, string> invoiceDetails = new Dictionary<string,string>();
+invoiceDetails.Add("number", "Invss123");
+invoiceDetails.Add("title", "Invoice April");
+invoiceDetails.Add("remittance", s_testVersion);
+invoiceDetails.Add("amount", "10.90");
+invoiceDetails.Add("date", "2020-03-20");
+invoiceDetails.Add("duedate", "2020-04-28");
+
+twikeyClient.Invoice.Create(_ct, _customer, invoiceDetails);
+```
+
+### Feed
+
+Retrieve the list of updates on invoices that had changes since the last call.
+
+```csharp
+//Implement this interface to work with response from Twikey
+//JObject -> Newtonsoft.Json.Linq
+public interface IInvoiceCallback
+{
+    void Invoice(JObject updatedInvoice);
+}
+
+twikeyClient.Invoice.Feed(new InvoiceCallbackImpl());
+```
+
+## Paymentlinks
+Create a payment link 
+
+**You need an integration like for example iDeal**
+
+```csharp
+Dictionary<string,string> paylinkDetails = new Dictionary<string, string>();
+paylinkDetails.Add("message",s_testVersion);
+paylinkDetails.Add("amount","1");
+long _ct = ...;
+
+twikeyClient.Paylink.Create(_ct, _customepaylinkDetails);
+
+```
+
+### Feed
+
+Get payment link feed since the last retrieval
+
+```csharp
+//Implement this interface to work with response from Twikey
+//JObject -> Newtonsoft.Json.Linq
+public interface IPaylinkCallback
+{
+    void Paylink(JObject paylink);
+}
+
+twikeyClient.Paylink.Feed(new PaylinkCallbackImpl());
 ```
 
 ## Transactions
@@ -110,13 +174,25 @@ Send new transactions and act upon feedback from the bank.
 
 ```csharp
 
-TODO
+Dictionary<string,string> transactionDetails = nDictionary<string, string>();
+transactionDetails.Add("message",s_testVersion);
+transactionDetails.Add("amount","1");
+String _mandateNumber = ...;
+
+twikeyClient.Transaction.Create(_mandateNumber, transactionDetails);
 ```
 
 ### Feed
 
 ```csharp
-TODO
+//Implement this interface to work with response from Twikey
+//JObject -> Newtonsoft.Json.Linq
+public interface ITransactionCallback
+{
+    void Transaction(JObject transaction);
+}
+
+twikeyClient.Transaction.Feed(new TransactionCallbackImpl());
 ```
 
 ## Webhook ##
@@ -124,7 +200,10 @@ TODO
 When wants to inform you about new updates about documents or payments a `webhookUrl` specified in your api settings be called.  
 
 ```csharp
-TODO
+string incomingSignature = request.Headers.GetValues("X-SIGNATURE").First<string>();
+string payload = request.Content.ReadAsStringAsync().Result;
+
+boolean valid = twikeyClient.VerifyWebHookSignature(incomingSignature,payload);
 ```
 
 ## API documentation ##

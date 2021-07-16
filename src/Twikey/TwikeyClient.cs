@@ -114,7 +114,7 @@ namespace Twikey
         /// <param name="signatureHeader">Header("X-SIGNATURE")</param>
         /// <param name="queryString">request.getQueryString</param>
         /// <returns>True for valid signatures</returns>
-        public bool verifyWebHookSignature(string signatureHeader, string queryString)
+        public bool VerifyWebHookSignature(string signatureHeader, string queryString)
         {
             byte[] providedSignature = JMethods.ParseHexBinary(signatureHeader);
 

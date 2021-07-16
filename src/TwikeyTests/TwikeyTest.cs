@@ -10,8 +10,10 @@ namespace TwikeyAPITests
     [TestClass]
     public class TwikeyAPITest
     {
+        private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
         private string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
         private long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
+        private string _mandateNumber = Environment.GetEnvironmentVariable("mndtNumber");
         private Customer _customer;
         private TwikeyClient _api;
 
@@ -69,34 +71,41 @@ namespace TwikeyAPITests
             Dictionary<string, string> invoiceDetails = new Dictionary<string, string>();
             invoiceDetails.Add("number", "Invss123");
             invoiceDetails.Add("title", "Invoice April");
-            invoiceDetails.Add("remittance", "123456789123");
+            invoiceDetails.Add("remittance", s_testVersion);
             invoiceDetails.Add("amount", "10.90");
             invoiceDetails.Add("date", "2020-03-20");
             invoiceDetails.Add("duedate", "2020-04-28");
             Console.WriteLine(_api.Invoice.Create(_ct, _customer, invoiceDetails));
         }
 
-        // [TestMethod]
-        // public void TestCreatePaylink()
-        // {
-        //     if (_apiKey == null)
-        //     {
-        //         Assert.Inconclusive("apiKey is null");
-        //         return;
-        //     }
-        //     Console.WriteLine(_api.Paylink.Create(_ct, _customer, new Dictionary<string, string>()));
-        // }
+        // Needs integration in Twikey for example iDeal
+        [TestMethod]
+        public void TestCreatePaylink()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Dictionary<string,string> paylinkDetails = new Dictionary<string, string>();
+            paylinkDetails.Add("message",s_testVersion);
+            paylinkDetails.Add("amount","1");
+            Console.WriteLine(_api.Paylink.Create(_ct, _customer, paylinkDetails));
+        }
 
-        // [TestMethod]
-        // public void TestCreateTransaction()
-        // {
-        //     if (_apiKey == null)
-        //     {
-        //         Assert.Inconclusive("apiKey is null");
-        //         return;
-        //     }
-        //     Console.WriteLine(_api.Transaction.Create(null, new Dictionary<string, string>()));
-        // }
+        [TestMethod]
+        public void TestCreateTransaction()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Dictionary<string,string> transactionDetails = new Dictionary<string, string>();
+            transactionDetails.Add("message",s_testVersion);
+            transactionDetails.Add("amount","1");
+            Console.WriteLine(_api.Transaction.Create(_mandateNumber, transactionDetails));
+        }
 
         [TestMethod]
         public void GetMandatesAndDetails(){
