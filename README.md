@@ -21,10 +21,26 @@ To use the Twikey API client, the following things are required:
 + .NET core >= 3.1.0
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
-## Installation ##
+## Installation 
 
-TODO
-https://docs.microsoft.com/en-us/nuget/create-packages/package-authoring-best-practices
+Check [NuGet packages](https://www.nuget.org/packages/TwikeySDK/)
+
+### Using the [.NET Core command-line interface (CLI) tools](https://docs.microsoft.com/en-us/dotnet/core/tools/):
+```bash
+dotnet add package TwikeySDK
+```
+
+### Using the [NuGet Command Line Interface (CLI)](https://docs.microsoft.com/en-us/nuget/reference/nuget-exe-cli-reference):
+
+```bash
+nuget install TwikeySDK
+```
+
+### Using the [Package Manager Console](https://docs.microsoft.com/en-us/nuget/consume-packages/install-use-packages-powershell):
+
+```bash
+Install-Package TwikeySDK
+```
 
 ## How to create anything ##
 
