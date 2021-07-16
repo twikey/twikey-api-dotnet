@@ -113,7 +113,7 @@ namespace Twikey
                     using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
                     {
                         JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                        JArray messagesArr = JArray.FromObject(json["Messages"]);
+                        JArray messagesArr = JArray.FromObject(json["Links"]);
                         isEmpty = messagesArr.Count == 0;
                         if (!isEmpty)
                         {

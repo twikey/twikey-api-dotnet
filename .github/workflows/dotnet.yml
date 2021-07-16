@@ -16,8 +16,14 @@ jobs:
       with:
         dotnet-version: 3.1.x
     - name: Restore dependencies
-      run: dotnet restore src/Twikey; dotnet restore src/TwikeyTests
+      run: dotnet restore src/Twikey && dotnet restore src/TwikeyTests
+
     - name: Build
-      run: dotnet build src/Twikey --no-restore; dotnet build src/TwikeyTests --no-restore
+      run: dotnet build src/Twikey --no-restore && dotnet build src/TwikeyTests --no-restore
+
     - name: Test
       run: dotnet test --no-build --logger "console;verbosity=detailed" src/TwikeyTests
+      env: 
+        TWIKEY_API_KEY: ${{ secrets.TWIKEY_API_KEY }}
+        CT: ${{ secrets.CT }}
+        mndtNumber: ${{ secrets.mndtNumber }}
