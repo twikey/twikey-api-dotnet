@@ -73,18 +73,18 @@ the behaviour or flow that the customer will experience. This 'ct' can be found 
 
 ```csharp
 Customer customer = new Customer()
-            {
-                CustomerNumber = "customerNum123",
-                Email = "no-reply@example.com",
-                Firstname = "Twikey",
-                Lastname = "Support",
-                Street = "Derbystraat 43",
-                City = "Gent",
-                Zip = "9000",
-                Country = "BE",
-                Lang = "nl",
-                Mobile = "32412345678"
-            };
+{
+    CustomerNumber = "customerNum123",
+    Email = "no-reply@example.com",
+    Firstname = "Twikey",
+    Lastname = "Support",
+    Street = "Derbystraat 43",
+    City = "Gent",
+    Zip = "9000",
+    Country = "BE",
+    Lang = "nl",
+    Mobile = "32412345678"
+};
 Dictionary<string,string> extraParams = ...;
 long ct = ...; 
 
@@ -116,18 +116,18 @@ Create new invoices
 
 ```csharp
 Customer customer = new Customer()
-            {
-                CustomerNumber = "customerNum123",
-                Email = "no-reply@example.com",
-                Firstname = "Twikey",
-                Lastname = "Support",
-                Street = "Derbystraat 43",
-                City = "Gent",
-                Zip = "9000",
-                Country = "BE",
-                Lang = "nl",
-                Mobile = "32412345678"
-            };
+{
+    CustomerNumber = "customerNum123",
+    Email = "no-reply@example.com",
+    Firstname = "Twikey",
+    Lastname = "Support",
+    Street = "Derbystraat 43",
+    City = "Gent",
+    Zip = "9000",
+    Country = "BE",
+    Lang = "nl",
+    Mobile = "32412345678"
+};
 Dictionary<string, string> invoiceDetails = new Dictionary<string,string>();
 invoiceDetails.Add("number", "Invss123");
 invoiceDetails.Add("title", "Invoice April");
@@ -190,12 +190,12 @@ Send new transactions and act upon feedback from the bank.
 
 ```csharp
 
-Dictionary<string,string> transactionDetails = nDictionary<string, string>();
-transactionDetails.Add("message",s_testVersion);
-transactionDetails.Add("amount","1");
-String _mandateNumber = ...;
+Dictionary<string,string> transactionDetails = new Dictionary<string, string>();
+transactionDetails.Add("message","My invoice 123");
+transactionDetails.Add("ref","My internal reference 123");
+transactionDetails.Add("amount","10.00");
 
-twikeyClient.Transaction.Create(_mandateNumber, transactionDetails);
+twikeyClient.Transaction.Create(mandateNumber, transactionDetails);
 ```
 
 ### Feed
