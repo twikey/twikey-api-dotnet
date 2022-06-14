@@ -91,9 +91,10 @@ namespace Twikey
 
         /// Get updates about all mandates (new/updated/cancelled)
         /// <param name="mandateCallback">Callback for every change</param>
+        /// <param name="includeCreditCard">Include creditcard mandate feed if true</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(IDocumentCallback mandateCallback)
+        public void Feed(IDocumentCallback mandateCallback, bool includeCreditCard = false)
         {
             Uri myUrl = _twikeyClient.GetUrl("/mandate");
             bool isEmpty;
@@ -104,7 +105,9 @@ namespace Twikey
                 request.Method = HttpMethod.Get;
                 request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
                 request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
-
+                if(includeCreditCard)
+                    request.Headers.Add("X-TYPES", "CREDITCARD");
+                
                 HttpResponseMessage response = _twikeyClient.Send(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
@@ -141,10 +144,6 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
-
         }
-
-
     }
-
 }

@@ -115,7 +115,16 @@ namespace TwikeyAPITests
                 return;
             }
             _api.Document.Feed(new DocumentCallbackImpl());
-  
+        }
+
+        [TestMethod]
+        public void GetMandatesAndDetailsCreditCard(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Document.Feed(new DocumentCallbackImpl(), true);
         }
 
         
