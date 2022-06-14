@@ -9,14 +9,9 @@ using System.IO;
 
 namespace Twikey
 {
-    public class TransactionGateway
+    public class TransactionGateway : Gateway
     {
-        private readonly TwikeyClient _twikeyClient;
-
-        protected internal TransactionGateway(TwikeyClient twikeyClient)
-        {
-            _twikeyClient = twikeyClient;
-        }
+        protected internal TransactionGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
         /// <param name="mandateNumber">required</param>
         /// <param name="transactionDetails">map with keys (message,ref,amount,place)</param>
@@ -37,8 +32,8 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(String mandateNumber, Dictionary<string, string> transactionDetails)
         {
-            Dictionary<string, string> parameters = new Dictionary<string, string>(transactionDetails);
-            parameters.Add("mndtId", mandateNumber);
+            Dictionary<string, string> parameters = CreateParameters(transactionDetails);
+            AddIfExists(parameters, "mndtId", mandateNumber);
 
             HttpRequestMessage request = new HttpRequestMessage();
             request.RequestUri = _twikeyClient.GetUrl("/transaction");
