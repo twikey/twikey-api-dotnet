@@ -11,18 +11,18 @@ namespace TwikeyAPITests
     public class TwikeyAPITest
     {
         private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
-        private string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
-        private long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
-        private string _mandateNumber = Environment.GetEnvironmentVariable("mndtNumber");
-        private Customer _customer;
-        private TwikeyClient _api;
+        private static readonly string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
+        private static readonly long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
+        private static readonly string _mandateNumber = Environment.GetEnvironmentVariable("mndtNumber");
+        private static Customer _customer;
+        private static TwikeyClient _api;
 
-        [TestInitialize]
-        public void CreateCustomer()
+        [ClassInitialize]
+        public static void CreateCustomer(TestContext testContext)
         {
             _customer = new Customer()
             {
-                CustomerNumber = "customerNum123",
+                CustomerNumber = "123",
                 Email = "no-reply@example.com",
                 Firstname = "Twikey",
                 Lastname = "Support",
@@ -46,6 +46,27 @@ namespace TwikeyAPITests
                 return;
             }
             Console.WriteLine(_api.Document.Create(_ct, null, new Dictionary<string, string>()));
+        }
+
+        [TestMethod]
+        public void TestInviteMandateWithCustomerDetailsNullAndEmptyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                CustomerNumber = "",
+                Email = null,
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            Console.WriteLine(_api.Document.Create(_ct, customer, new Dictionary<string, string>()));
         }
 
 
@@ -78,6 +99,35 @@ namespace TwikeyAPITests
             Console.WriteLine(_api.Invoice.Create(_ct, _customer, invoiceDetails));
         }
 
+        [TestMethod]
+        public void TestCreateInvoiceWithCustomerNullEmtpyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                CustomerNumber = "",
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000",
+                Mobile = null
+            };
+            Dictionary<string, string> invoiceDetails = new Dictionary<string, string>();
+            invoiceDetails.Add("number", "Invss123");
+            invoiceDetails.Add("title", "Invoice April");
+            invoiceDetails.Add("remittance", s_testVersion);
+            invoiceDetails.Add("amount", "10.90");
+            invoiceDetails.Add("date", "2020-03-20");
+            invoiceDetails.Add("duedate", "2020-04-28");
+            Console.WriteLine(_api.Invoice.Create(_ct, customer, invoiceDetails));
+        }
+
         // Needs integration in Twikey for example iDeal
         [TestMethod]
         public void TestCreatePaylink()
@@ -91,6 +141,32 @@ namespace TwikeyAPITests
             paylinkDetails.Add("message",s_testVersion);
             paylinkDetails.Add("amount","1");
             Console.WriteLine(_api.Paylink.Create(_ct, _customer, paylinkDetails));
+        }
+
+        [TestMethod]
+        public void TestCreatePaylinkWithCustomerNullEmptyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            Customer customer = new Customer()
+            {
+                CustomerNumber = "",
+                Email = null,
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            
+            Dictionary<string,string> paylinkDetails = new Dictionary<string, string>();
+            paylinkDetails.Add("message",s_testVersion);
+            paylinkDetails.Add("amount","1");
+            Console.WriteLine(_api.Paylink.Create(_ct, customer, paylinkDetails));
         }
 
         [TestMethod]
@@ -115,7 +191,26 @@ namespace TwikeyAPITests
                 return;
             }
             _api.Document.Feed(new DocumentCallbackImpl());
-  
+        }
+
+        [TestMethod]
+        public void GetMandatesAndDetailsCreditCard(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Document.Feed(new DocumentCallbackImpl(), "CREDITCARD");
+        }
+
+        [TestMethod]
+        public void GetMandatesAndDetailsCreditCardAndWIK(){
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            _api.Document.Feed(new DocumentCallbackImpl(), "CREDITCARD", "WIK");
         }
 
         

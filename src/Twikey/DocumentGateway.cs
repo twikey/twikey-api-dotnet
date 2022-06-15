@@ -10,14 +10,9 @@ using System.IO;
 
 namespace Twikey
 {
-    public class DocumentGateway
+    public class DocumentGateway : Gateway
     {
-        private readonly TwikeyClient _twikeyClient;
-
-        protected internal DocumentGateway(TwikeyClient twikeyClient)
-        {
-            _twikeyClient = twikeyClient;
-        }
+        protected internal DocumentGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
         /*
           * <ul>
@@ -44,25 +39,24 @@ namespace Twikey
         /// <returns>Url to redirect the customer to or to send in an email</returns>
         public JObject Create(long ct, Customer customer, Dictionary<string, string> mandateDetails)
         {
-            Dictionary<string, string> parameters = new Dictionary<string, string>(mandateDetails);
+            Dictionary<string, string> parameters = CreateParameters(mandateDetails);
             parameters.Add("ct", ct.ToString());
             if (customer != null)
             {
-                parameters.Add("customerNumber", customer.CustomerNumber);
-                parameters.Add("email", customer.Email);
-                parameters.Add("firstname", customer.Firstname);
-                parameters.Add("lastname", customer.Lastname);
-                parameters.Add("l", customer.Lang);
-                parameters.Add("address", customer.Street);
-                parameters.Add("city", customer.City);
-                parameters.Add("zip", customer.Zip);
-                parameters.Add("country", customer.Country);
-                parameters.Add("mobile", customer.Mobile);
-
+                AddIfExists(parameters,"customerNumber", customer.CustomerNumber);
+                AddIfExists(parameters,"email", customer.Email);
+                AddIfExists(parameters,"firstname", customer.Firstname);
+                AddIfExists(parameters,"lastname", customer.Lastname);
+                AddIfExists(parameters,"l", customer.Lang);
+                AddIfExists(parameters,"address", customer.Street);
+                AddIfExists(parameters,"city", customer.City);
+                AddIfExists(parameters,"zip", customer.Zip);
+                AddIfExists(parameters,"country", customer.Country);
+                AddIfExists(parameters,"mobile", customer.Mobile);
                 if (customer.CompanyName != null)
                 {
-                    parameters.Add("companyName", customer.CompanyName);
-                    parameters.Add("coc", customer.Coc);
+                    AddIfExists(parameters,"companyName", customer.CompanyName);
+                    AddIfExists(parameters,"coc", customer.Coc);
                 }
             }
 
@@ -91,9 +85,10 @@ namespace Twikey
 
         /// Get updates about all mandates (new/updated/cancelled)
         /// <param name="mandateCallback">Callback for every change</param>
+        /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(IDocumentCallback mandateCallback)
+        public void Feed(IDocumentCallback mandateCallback, params string[] xTypes)
         {
             Uri myUrl = _twikeyClient.GetUrl("/mandate");
             bool isEmpty;
@@ -104,7 +99,9 @@ namespace Twikey
                 request.Method = HttpMethod.Get;
                 request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
                 request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
-
+                if(xTypes != null && xTypes.Length != 0)
+                    request.Headers.Add("X-TYPES", String.Join(',', xTypes));
+                
                 HttpResponseMessage response = _twikeyClient.Send(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
@@ -141,10 +138,6 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
-
         }
-
-
     }
-
 }
