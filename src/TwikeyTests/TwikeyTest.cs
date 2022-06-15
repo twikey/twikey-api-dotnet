@@ -48,6 +48,27 @@ namespace TwikeyAPITests
             Console.WriteLine(_api.Document.Create(_ct, null, new Dictionary<string, string>()));
         }
 
+        
+        [TestMethod]
+        public void TestInviteMandateWithCustomerDetailsNullFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            Console.WriteLine(_api.Document.Create(_ct, customer, new Dictionary<string, string>()));
+        }
+
 
         [TestMethod]
         public void TestInviteMandateCustomerDetails()
@@ -78,6 +99,33 @@ namespace TwikeyAPITests
             Console.WriteLine(_api.Invoice.Create(_ct, _customer, invoiceDetails));
         }
 
+        [TestMethod]
+        public void TestCreateInvoiceWithCustomerNullFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            Dictionary<string, string> invoiceDetails = new Dictionary<string, string>();
+            invoiceDetails.Add("number", "Invss123");
+            invoiceDetails.Add("title", "Invoice April");
+            invoiceDetails.Add("remittance", s_testVersion);
+            invoiceDetails.Add("amount", "10.90");
+            invoiceDetails.Add("date", "2020-03-20");
+            invoiceDetails.Add("duedate", "2020-04-28");
+            Console.WriteLine(_api.Invoice.Create(_ct, customer, invoiceDetails));
+        }
+
         // Needs integration in Twikey for example iDeal
         [TestMethod]
         public void TestCreatePaylink()
@@ -91,6 +139,31 @@ namespace TwikeyAPITests
             paylinkDetails.Add("message",s_testVersion);
             paylinkDetails.Add("amount","1");
             Console.WriteLine(_api.Paylink.Create(_ct, _customer, paylinkDetails));
+        }
+
+        [TestMethod]
+        public void TestCreatePaylinkWithCustomerNullFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            Customer customer = new Customer()
+            {
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            
+            Dictionary<string,string> paylinkDetails = new Dictionary<string, string>();
+            paylinkDetails.Add("message",s_testVersion);
+            paylinkDetails.Add("amount","1");
+            Console.WriteLine(_api.Paylink.Create(_ct, customer, paylinkDetails));
         }
 
         [TestMethod]

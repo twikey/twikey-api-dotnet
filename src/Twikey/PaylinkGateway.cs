@@ -39,20 +39,30 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(long ct, Customer customer, Dictionary<string, string> linkDetails)
         {
-            Dictionary<string, string> parameters = new Dictionary<string, string>(linkDetails);
+            Dictionary<string, string> parameters = linkDetails != null ? new Dictionary<string, string>(linkDetails) : new Dictionary<string, string>();
             parameters.Add("ct", ct.ToString());
             if (customer != null)
             {
-                parameters.Add("customerNumber", customer.CustomerNumber);
-                parameters.Add("email", customer.Email);
-                parameters.Add("firstname", customer.Firstname);
-                parameters.Add("lastname", customer.Lastname);
-                parameters.Add("l", customer.Lang);
-                parameters.Add("address", customer.Street);
-                parameters.Add("city", customer.City);
-                parameters.Add("zip", customer.Zip);
-                parameters.Add("country", customer.Country);
-                parameters.Add("mobile", customer.Mobile);
+                if(customer.CustomerNumber != null)
+                    parameters.Add("customerNumber", customer.CustomerNumber);
+                if(customer.Email != null)
+                    parameters.Add("email", customer.Email);
+                if(customer.Firstname != null)
+                    parameters.Add("firstname", customer.Firstname);
+                if(customer.Lastname != null)
+                    parameters.Add("lastname", customer.Lastname);
+                if(customer.Lang != null)
+                    parameters.Add("l", customer.Lang);
+                if(customer.Street != null)
+                    parameters.Add("address", customer.Street);
+                if(customer.City != null)
+                    parameters.Add("city", customer.City);
+                if(customer.Zip != null)
+                    parameters.Add("zip", customer.Zip);
+                if(customer.Country != null)
+                    parameters.Add("country", customer.Country);
+                if(customer.Mobile != null)
+                    parameters.Add("mobile", customer.Mobile);
 
                 if (customer.CompanyName != null)
                 {

@@ -39,19 +39,27 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(long ct, Customer customer, Dictionary<string, string> invoiceDetails)
         {
-            JObject customerAsJson = new JObject(){
-                {"customerNumber",customer.CustomerNumber},
-                {"email", customer.Email},
-                {"firstname", customer.Firstname},
-                {"lastname", customer.Lastname},
-                {"l", customer.Lang},
-                {"address", customer.Street},
-                {"city", customer.City},
-                {"zip", customer.Zip},
-                {"country", customer.Country},
-                {"mobile", customer.Mobile}
-            };
-
+            JObject customerAsJson = new JObject();
+            if(customer.CustomerNumber != null)
+                customerAsJson.Add("customerNumber", customer.CustomerNumber);
+            if(customer.Email != null)
+                customerAsJson.Add("email", customer.Email);
+            if(customer.Firstname != null)
+                customerAsJson.Add("firstname", customer.Firstname);
+            if(customer.Lastname != null)
+                customerAsJson.Add("lastname", customer.Lastname);
+            if(customer.Lang != null)
+                customerAsJson.Add("l", customer.Lang);
+            if(customer.Street != null)
+                customerAsJson.Add("address", customer.Street);
+            if(customer.City != null)
+                customerAsJson.Add("city", customer.City);
+            if(customer.Zip != null)
+                customerAsJson.Add("zip", customer.Zip);
+            if(customer.Country != null)
+                customerAsJson.Add("country", customer.Country);
+            if(customer.Mobile != null)
+                customerAsJson.Add("mobile", customer.Mobile);
             if (customer.CompanyName != null)
             {
                 customerAsJson.Add("companyName", customer.CompanyName);
@@ -65,10 +73,12 @@ namespace Twikey
                 {"ct", ct}
             };
 
-            foreach (KeyValuePair<string, string> entry in invoiceDetails)
-            {
-                if (!invoice.ContainsKey(entry.Key))
-                    invoice.Add(entry.Key, entry.Value);
+            if(invoiceDetails != null){
+                foreach (KeyValuePair<string, string> entry in invoiceDetails)
+                {
+                    if (!invoice.ContainsKey(entry.Key))
+                        invoice.Add(entry.Key, entry.Value);
+                }
             }
 
             HttpRequestMessage request = new HttpRequestMessage();

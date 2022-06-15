@@ -37,7 +37,7 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(String mandateNumber, Dictionary<string, string> transactionDetails)
         {
-            Dictionary<string, string> parameters = new Dictionary<string, string>(transactionDetails);
+            Dictionary<string, string> parameters = transactionDetails != null ? new Dictionary<string, string>(transactionDetails) : new Dictionary<string, string>();
             parameters.Add("mndtId", mandateNumber);
 
             HttpRequestMessage request = new HttpRequestMessage();
