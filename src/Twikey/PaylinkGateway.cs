@@ -10,14 +10,9 @@ using System.IO;
 
 namespace Twikey
 {
-    public class PaylinkGateway
+    public class PaylinkGateway : Gateway
     {
-        private readonly TwikeyClient _twikeyClient;
-
-        protected internal PaylinkGateway(TwikeyClient twikeyClient)
-        {
-            _twikeyClient = twikeyClient;
-        }
+        protected internal PaylinkGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
         /*
          * <ul>
@@ -39,25 +34,25 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(long ct, Customer customer, Dictionary<string, string> linkDetails)
         {
-            Dictionary<string, string> parameters = new Dictionary<string, string>(linkDetails);
-            parameters.Add("ct", ct.ToString());
+            Dictionary<string, string> parameters = CreateParameters(linkDetails);
+            AddIfExists(parameters,"ct", ct.ToString());
             if (customer != null)
             {
-                parameters.Add("customerNumber", customer.CustomerNumber);
-                parameters.Add("email", customer.Email);
-                parameters.Add("firstname", customer.Firstname);
-                parameters.Add("lastname", customer.Lastname);
-                parameters.Add("l", customer.Lang);
-                parameters.Add("address", customer.Street);
-                parameters.Add("city", customer.City);
-                parameters.Add("zip", customer.Zip);
-                parameters.Add("country", customer.Country);
-                parameters.Add("mobile", customer.Mobile);
+                AddIfExists(parameters,"customerNumber", customer.CustomerNumber);
+                AddIfExists(parameters,"email", customer.Email);
+                AddIfExists(parameters,"firstname", customer.Firstname);
+                AddIfExists(parameters,"lastname", customer.Lastname);
+                AddIfExists(parameters,"l", customer.Lang);
+                AddIfExists(parameters,"address", customer.Street);
+                AddIfExists(parameters,"city", customer.City);
+                AddIfExists(parameters,"zip", customer.Zip);
+                AddIfExists(parameters,"country", customer.Country);
+                AddIfExists(parameters,"mobile", customer.Mobile);
 
                 if (customer.CompanyName != null)
                 {
-                    parameters.Add("companyName", customer.CompanyName);
-                    parameters.Add("coc", customer.Coc);
+                    AddIfExists(parameters,"companyName", customer.CompanyName);
+                    AddIfExists(parameters,"coc", customer.Coc);
                 }
             }
 

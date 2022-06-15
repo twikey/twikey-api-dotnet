@@ -11,14 +11,9 @@ using System.IO;
 
 namespace Twikey
 {
-    public class InvoiceGateway
+    public class InvoiceGateway : Gateway
     {
-        private readonly TwikeyClient _twikeyClient;
-
-        protected internal InvoiceGateway(TwikeyClient twikeyClient)
-        {
-            _twikeyClient = twikeyClient;
-        }
+        protected internal InvoiceGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
         /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         /// <param name="customer">Customer details</param>
@@ -39,23 +34,21 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public JObject Create(long ct, Customer customer, Dictionary<string, string> invoiceDetails)
         {
-            JObject customerAsJson = new JObject(){
-                {"customerNumber",customer.CustomerNumber},
-                {"email", customer.Email},
-                {"firstname", customer.Firstname},
-                {"lastname", customer.Lastname},
-                {"l", customer.Lang},
-                {"address", customer.Street},
-                {"city", customer.City},
-                {"zip", customer.Zip},
-                {"country", customer.Country},
-                {"mobile", customer.Mobile}
-            };
-
+            JObject customerAsJson = new JObject();
+            AddIfExists(customerAsJson,"customerNumber", customer.CustomerNumber);
+            AddIfExists(customerAsJson,"email", customer.Email);
+            AddIfExists(customerAsJson,"firstname", customer.Firstname);
+            AddIfExists(customerAsJson,"lastname", customer.Lastname);
+            AddIfExists(customerAsJson,"l", customer.Lang);
+            AddIfExists(customerAsJson,"address", customer.Street);
+            AddIfExists(customerAsJson,"city", customer.City);
+            AddIfExists(customerAsJson,"zip", customer.Zip);
+            AddIfExists(customerAsJson,"country", customer.Country);
+            AddIfExists(customerAsJson,"mobile", customer.Mobile);
             if (customer.CompanyName != null)
             {
-                customerAsJson.Add("companyName", customer.CompanyName);
-                customerAsJson.Add("coc", customer.Coc);
+                AddIfExists(customerAsJson,"companyName", customer.CompanyName);
+                AddIfExists(customerAsJson,"coc", customer.Coc);
             }
 
             JObject invoice = new JObject(){
@@ -65,10 +58,12 @@ namespace Twikey
                 {"ct", ct}
             };
 
-            foreach (KeyValuePair<string, string> entry in invoiceDetails)
-            {
-                if (!invoice.ContainsKey(entry.Key))
-                    invoice.Add(entry.Key, entry.Value);
+            if(invoiceDetails != null){
+                foreach (KeyValuePair<string, string> entry in invoiceDetails)
+                {
+                    if (!invoice.ContainsKey(entry.Key))
+                        invoice.Add(entry.Key, entry.Value);
+                }
             }
 
             HttpRequestMessage request = new HttpRequestMessage();
