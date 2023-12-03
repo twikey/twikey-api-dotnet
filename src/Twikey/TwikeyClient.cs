@@ -111,8 +111,8 @@ namespace Twikey
             public UnauthenticatedException() : base("Not authenticated") { }
         }
 
-        /// <param name="signatureHeader">Header("X-SIGNATURE")</param>
-        /// <param name="queryString">request.getQueryString</param>
+        /// <param name="signatureHeader">Request.Headers["X-SIGNATURE"].First<string>()</param>
+        /// <param name="queryString">Request.QueryString.Value with format "msg=dummytest&type=event"</param>
         /// <returns>True for valid signatures</returns>
         public bool VerifyWebHookSignature(string signatureHeader, string queryString)
         {

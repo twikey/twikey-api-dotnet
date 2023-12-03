@@ -216,10 +216,27 @@ twikeyClient.Transaction.Feed(new TransactionCallbackImpl());
 When wants to inform you about new updates about documents or payments a `webhookUrl` specified in your api settings be called.  
 
 ```csharp
-string incomingSignature = request.Headers.GetValues("X-SIGNATURE").First<string>();
-string payload = request.Content.ReadAsStringAsync().Result;
+/**
+    * Formats query string from TwiKey to a query string for the webhook request validation
+    * @return query string for the webhook request validation, for example msg=dummytest&type=event
+    */
+private string ParseTwiKeyCreateQuerySubString()
+{
+    var queryParameters = HttpUtility.UrlDecode(Request.QueryString.Value);
+    
+    // question mark needs to be removed
+    if(queryParameters != null && queryParameters[0] == '?')
+    {
+        queryParameters = queryParameters.Substring(1);
+    }
+    return queryParameters;
+}
+string incomingSignature = Request.Headers["X-SIGNATURE"].First<string>();
 
-boolean valid = twikeyClient.VerifyWebHookSignature(incomingSignature,payload);
+// query parameter needs to be in the following format "msg=dummytest&type=event"
+string payload = ParseTwiKeyCreateQuerySubString();
+
+bool valid = twikeyClient.VerifyWebHookSignature(incomingSignature,payload);
 ```
 
 ## API documentation ##
