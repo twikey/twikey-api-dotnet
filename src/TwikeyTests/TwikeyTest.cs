@@ -267,6 +267,5 @@ namespace TwikeyAPITests
             Assert.AreEqual("BE08001166979213", ibanAndBic[0]);
             Assert.AreEqual("GEBABEBB", ibanAndBic[1]);
         }
-
     }
 }

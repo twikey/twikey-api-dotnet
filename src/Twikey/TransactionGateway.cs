@@ -6,6 +6,9 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
+using System.Text;
+using System.Net.Http.Headers;
+using Twikey.Models.Transactions;
 
 namespace Twikey
 {
@@ -60,6 +63,59 @@ namespace Twikey
 
         }
 
+        public Transaction CreateTransaction(TransactionEntry transaction)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl("/transaction");
+            request.Method = HttpMethod.Post;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+
+            var json = JsonConvert.SerializeObject(transaction);
+            var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+
+            request.Content = new FormUrlEncodedContent(dict);
+
+            HttpResponseMessage response = _twikeyClient.Send(request);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = response.Content.ReadAsStringAsync().Result;
+                return JsonConvert.DeserializeObject<Transaction>(responseString);
+            }
+            string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+            throw new TwikeyClient.UserException(apiError);
+        }
+
+        public IEnumerable<TransactionEntry> Feed()
+        {
+            var transactionEntries = new List<TransactionEntry>();
+            Uri myUrl = _twikeyClient.GetUrl("/transaction");
+            bool isEmpty;
+            do
+            {
+                HttpRequestMessage request = new HttpRequestMessage();
+                request.RequestUri = myUrl;
+                request.Method = HttpMethod.Get;
+                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+
+                HttpResponseMessage response = _twikeyClient.Send(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var responseText = response.Content.ReadAsStringAsync().Result;
+                    var feed = JsonConvert.DeserializeObject<Transaction>(responseText);
+                    transactionEntries.AddRange(feed.Entries);
+                    isEmpty = !feed.Entries.Any();
+                }
+                else
+                {
+                    string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                    throw new TwikeyClient.UserException(apiError);
+                }
+            } while (!isEmpty);
+            return transactionEntries;
+        }
 
         /// <param name="transactionCallback">Callback for every change</param>
         /// <exception cref="IOException">When a network issue happened</exception>
