@@ -7,6 +7,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
+using Twikey.Models.Mandates;
 
 namespace Twikey
 {
@@ -138,6 +139,42 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
+        }
+
+        /// Get updates about all mandates (new/updated/cancelled)
+        /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public IEnumerable<MandateFeedMessage> Feed(params string[] xTypes)
+        {
+            Uri myUrl = _twikeyClient.GetUrl("/mandate");
+            bool isEmpty;
+            var messages = new List<MandateFeedMessage>();
+            do
+            {
+                HttpRequestMessage request = new HttpRequestMessage();
+                request.RequestUri = myUrl;
+                request.Method = HttpMethod.Get;
+                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+                if (xTypes != null && xTypes.Length != 0)
+                    request.Headers.Add("X-TYPES", string.Join(',', xTypes));
+
+                HttpResponseMessage response = _twikeyClient.Send(request);
+                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+                {
+                    var responseString = response.Content.ReadAsStringAsync().Result;
+                    var feed = JsonConvert.DeserializeObject<MandateFeed>(responseString);
+                    messages.AddRange(feed.Messages);
+                    isEmpty = !feed.Messages.Any();
+                }
+                else
+                {
+                    string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                    throw new TwikeyClient.UserException(apiError);
+                }
+            } while (!isEmpty);
+            return messages;
         }
     }
 }
