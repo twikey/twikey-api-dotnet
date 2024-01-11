@@ -26,6 +26,33 @@ namespace Twikey
                 parameters.Add(key, value);
         }
 
+        protected void AddIfExists(Dictionary<string, string> parameters, string key, bool value){
+            if(parameters == null || String.IsNullOrEmpty(key))
+                return;
+            if(value)
+               parameters.Add(key, value.ToString());
+        }
+
+        protected void AddIfExists(Dictionary<string, string> parameters, string key, int? value){
+            if(parameters == null || String.IsNullOrEmpty(key))
+                return;
+            if(value != null)
+               parameters.Add(key, value.ToString());
+        }
+
+        protected void AddIfExists(Dictionary<string, string> parameters, string key, DateTime value){
+            if(parameters == null || String.IsNullOrEmpty(key))
+                return;
+            parameters.Add(key, value.ToString("yyyy-MM-ddTHH:mm:ss"));
+        }
+
+        protected void AddIfExists(Dictionary<string, string> parameters, string key, double? value){
+            if(parameters == null || String.IsNullOrEmpty(key))
+                return;
+            if(value != null)
+               parameters.Add(key, value.ToString());
+        }
+
         protected void AddIfExists(JObject parameters, string key, string value){
             if(parameters == null || String.IsNullOrEmpty(key))
                 return;

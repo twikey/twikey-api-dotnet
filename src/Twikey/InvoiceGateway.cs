@@ -1,5 +1,4 @@
-using Twikey.Modal;
-using Twikey.ICallback;
+using Twikey.Model;
 using System.Collections.Generic;
 using System;
 using System.Net.Http;
@@ -18,52 +17,19 @@ namespace Twikey
         /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         /// <param name="customer">Customer details</param>
         /// <param name="invoiceDetails">Details specific to the invoice</param>
-        /// <returns>jsonobject {
-        //                       "id": "fec44175-b4fe-414c-92aa-9d0a7dd0dbf2",
-        //                       "number": "Inv20200001",
-        //                       "title": "Invoice July",
-        //                       "ct": 1988,
-        //                       "amount": "100.00",
-        //                       "date": "2020-01-31",
-        //                       "duedate": "2020-02-28",
-        //                       "status": "BOOKED",
-        //                       "url": "https://yourpage.beta.twikey.com/invoice.html?fec44175-b4fe-414c-92aa-9d0a7dd0dbf2"
-        //                     }
-        /// </returns>
+        /// <returns cref="Invoice">Saved invoice</returns>
         /// <exception cref="IOException">When no connection could be made</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        public JObject Create(long ct, Customer customer, Dictionary<string, string> invoiceDetails)
+        public Invoice Create(long ct, Customer customer, Invoice invoice)
         {
-            JObject customerAsJson = new JObject();
-            AddIfExists(customerAsJson,"customerNumber", customer.CustomerNumber);
-            AddIfExists(customerAsJson,"email", customer.Email);
-            AddIfExists(customerAsJson,"firstname", customer.Firstname);
-            AddIfExists(customerAsJson,"lastname", customer.Lastname);
-            AddIfExists(customerAsJson,"l", customer.Lang);
-            AddIfExists(customerAsJson,"address", customer.Street);
-            AddIfExists(customerAsJson,"city", customer.City);
-            AddIfExists(customerAsJson,"zip", customer.Zip);
-            AddIfExists(customerAsJson,"country", customer.Country);
-            AddIfExists(customerAsJson,"mobile", customer.Mobile);
-            if (customer.CompanyName != null)
+            if(customer != null)
             {
-                AddIfExists(customerAsJson,"companyName", customer.CompanyName);
-                AddIfExists(customerAsJson,"coc", customer.Coc);
+                invoice.Customer = customer;
             }
 
-            JObject invoice = new JObject(){
-                {"customer", customerAsJson},
-                {"date", invoiceDetails["date"] != null ? invoiceDetails["date"]: DateTime.Now.ToString()},
-                {"duedate", invoiceDetails["duedate"] != null ? invoiceDetails["date"]: DateTime.Now.AddMonths(1).ToString()},
-                {"ct", ct}
-            };
-
-            if(invoiceDetails != null){
-                foreach (KeyValuePair<string, string> entry in invoiceDetails)
-                {
-                    if (!invoice.ContainsKey(entry.Key))
-                        invoice.Add(entry.Key, entry.Value);
-                }
+            if(ct > 0)
+            {
+                invoice.Ct = ct;
             }
 
             HttpRequestMessage request = new HttpRequestMessage();
@@ -72,29 +38,34 @@ namespace Twikey
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
 
-            request.Content = new StringContent(invoice.ToString(), Encoding.UTF8, TwikeyClient.JSON);
-            HttpResponseMessage response = _twikeyClient.Send(request);
+            var invoice_string = JsonConvert.SerializeObject(invoice, Formatting.Indented);
+            request.Content = new StringContent(invoice_string, Encoding.UTF8, TwikeyClient.JSON);
 
+            HttpResponseMessage response = _twikeyClient.Send(request);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
-                {
-                    return JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                }
+                var responseString = response.Content.ReadAsStringAsync().Result;
+                return JsonConvert.DeserializeObject<Invoice>(responseString);
             }
 
             String apiError = response.Headers.GetValues("ApiError").First<string>();
             throw new TwikeyClient.UserException(apiError);
         }
 
-
         // Get updates about all invoices (new/updated/cancelled)
         /// <param name="invoiceCallback">Callback for every change</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(IInvoiceCallback invoiceCallback)
+        public IEnumerable<Invoice> Feed(params string[] sideloads)
         {
-            Uri myUrl = _twikeyClient.GetUrl("/invoice");
+            string url = "/invoice";
+            if(sideloads != null && sideloads.Length != 0)
+            {
+                var extra = Array.ConvertAll(sideloads, sideload => "include="+sideload.ToString());
+                url += "?" + string.Join("&",extra);
+            }
+
+            Uri myUrl = _twikeyClient.GetUrl(url);
             bool isEmpty;
             do
             {
@@ -107,21 +78,13 @@ namespace Twikey
                 HttpResponseMessage response = _twikeyClient.Send(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+                    var responseString = response.Content.ReadAsStringAsync().Result;
+                    var feed = JsonConvert.DeserializeObject<InvoiceUpdates>(responseString);
+                    foreach(var invoice in feed.Invoices)
                     {
-                        JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                        JArray messagesArr = JArray.FromObject(json["Invoices"]);
-                        isEmpty = messagesArr.Count == 0;
-                        if (!isEmpty)
-                        {
-                            for (int i = 0; i < messagesArr.Count; i++)
-                            {
-                                JObject obj = (JObject)messagesArr[i];
-                                invoiceCallback.Invoice(obj);
-                            }
-                        }
+                        yield return invoice;
                     }
-
+                    isEmpty = !feed.Invoices.Any();
                 }
                 else
                 {
@@ -129,8 +92,6 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
-
         }
-
     }
 }

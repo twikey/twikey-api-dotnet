@@ -84,10 +84,10 @@ namespace Twikey
                     _sessionToken = response.Headers.GetValues("Authorization").First<string>();
                     _lastLogin = JMethods.CurrentTimeMillis();
                 }
-                catch (Exception ignore)
+                catch (Exception e)
                 {
                     _lastLogin = 0L;
-                    throw new UnauthenticatedException();
+                    throw new UnauthenticatedException(e);
                 }
 
             }
@@ -104,11 +104,12 @@ namespace Twikey
         public class UserException : Exception
         {
             public UserException(String apiError) : base(apiError) { }
+            public UserException(String apiError, Exception e) : base(apiError,e) { }
         }
 
         public class UnauthenticatedException : UserException
         {
-            public UnauthenticatedException() : base("Not authenticated") { }
+            public UnauthenticatedException(Exception e) : base("Not authenticated",e) { }
         }
 
         /// <param name="signatureHeader">Request.Headers["X-SIGNATURE"].First<string>()</param>
@@ -170,7 +171,7 @@ namespace Twikey
                 using (HashAlgorithm md5 = MD5.Create())
                 {
                     byte[] keyBytes = md5.ComputeHash(Encoding.UTF8.GetBytes(key));
-                    using (AesCryptoServiceProvider cipher = new AesCryptoServiceProvider())
+                    using (Aes cipher = Aes.Create())
                     {
                         cipher.Key = keyBytes;
                         cipher.Mode = CipherMode.CBC;

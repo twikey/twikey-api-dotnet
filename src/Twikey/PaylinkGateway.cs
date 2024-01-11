@@ -1,5 +1,4 @@
-using Twikey.Modal;
-using Twikey.ICallback;
+using Twikey.Model;
 using System.Collections.Generic;
 using System;
 using System.Net.Http;
@@ -14,28 +13,26 @@ namespace Twikey
     {
         protected internal PaylinkGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
-        /*
-         * <ul>
-         * <li>title	Message to the debtor [*1]	Yes	string (200)</li>
-         * <li>remittance	Payment message, if empty then title will be used [*2]	No	string</li>
-         * <li>amount	Amount to be billed	Yes	string</li>
-         * <li>redirectUrl	Optional redirect after pay url (must use http(s)://)	No	url</li>
-         * <li>place	Optional place	No	string</li>
-         * <li>expiry	Optional expiration date	No	date</li>
-         * <li>sendInvite	Send out invite email or sms directly (email, sms)	No	string</li>
-         * <li>method	Circumvents the payment selection with PSP (bancontact/ideal/maestro/mastercard/visa/inghomepay/kbc/belfius)	No	string</li>
-         * <li>invoice	create payment link for specific invoice number	No	string</li>
-         * </ul>
-        */
-        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         /// <param name="customer">Customer details</param>
-        /// <param name="mandateDetails">Map containing any of the parameters in the above table</param>
+        /// <param name="request">Request containing the specifics of the link</param>
         /// <exception cref="IOException">When no connection could be made</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        public JObject Create(long ct, Customer customer, Dictionary<string, string> linkDetails)
+        public Paylink Create(Customer customer, PaylinkRequest linkrequest)
         {
-            Dictionary<string, string> parameters = CreateParameters(linkDetails);
-            AddIfExists(parameters,"ct", ct.ToString());
+            var parameters = new Dictionary<string, string>();
+            AddIfExists(parameters,"ct", linkrequest.Ct);
+            AddIfExists(parameters,"tc", linkrequest.Tc);
+
+            AddIfExists(parameters, "title", linkrequest.Message);
+            AddIfExists(parameters, "remittance", linkrequest.Remittance);
+            AddIfExists(parameters, "amount", linkrequest.Amount);
+            AddIfExists(parameters, "redirectUrl", linkrequest.RedirectUrl);
+            AddIfExists(parameters, "place", linkrequest.Place);
+            AddIfExists(parameters, "expiry", linkrequest.Expiry);
+            AddIfExists(parameters, "sendInvite", linkrequest.SendInvite);
+            AddIfExists(parameters, "method", linkrequest.Method);
+            AddIfExists(parameters, "invoice", linkrequest.Invoice);
+
             if (customer != null)
             {
                 AddIfExists(parameters,"customerNumber", customer.CustomerNumber);
@@ -67,32 +64,28 @@ namespace Twikey
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
-                {
-                    /* 
-                       {
-                        "mndtId": "COREREC01",
-                        "url": "http://twikey.to/myComp/ToYG",
-                        "key": "ToYG"
-                       } 
-                    */
-                    return JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                }
+                var responseString = response.Content.ReadAsStringAsync().Result;
+                return JsonConvert.DeserializeObject<Paylink>(responseString);
             }
 
-            String apiError = response.Headers.GetValues("ApiError").First<string>();
+            String apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
             throw new TwikeyClient.UserException(apiError);
-
         }
-
 
         /// Get updates about all links
         /// <param name="paylinkCallback">Callback for every change</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(IPaylinkCallback paylinkCallback)
+        public IEnumerable<Paylink> Feed(params string[] sideloads)
         {
-            Uri myUrl = _twikeyClient.GetUrl("/payment/link/feed");
+            string url = "/payment/link/feed";
+            if(sideloads != null && sideloads.Length != 0)
+            {
+                var extra = Array.ConvertAll(sideloads, sideload => "include="+sideload.ToString());
+                url += "?" + string.Join("&",extra);
+            }
+
+            Uri myUrl = _twikeyClient.GetUrl(url);
             bool isEmpty;
             do
             {
@@ -105,21 +98,13 @@ namespace Twikey
                 HttpResponseMessage response = _twikeyClient.Send(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
+                    var responseText = response.Content.ReadAsStringAsync().Result;
+                    var feed = JsonConvert.DeserializeObject<Paylinks>(responseText);
+                    foreach(var _paylink in feed.Links)
                     {
-                        JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                        JArray messagesArr = JArray.FromObject(json["Links"]);
-                        isEmpty = messagesArr.Count == 0;
-                        if (!isEmpty)
-                        {
-                            for (int i = 0; i < messagesArr.Count; i++)
-                            {
-                                JObject obj = (JObject)messagesArr[i];
-                                paylinkCallback.Paylink(obj);
-                            }
-                        }
+                        yield return _paylink;
                     }
-
+                    isEmpty = !feed.Links.Any();
                 }
                 else
                 {
@@ -127,9 +112,6 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
-
         }
-
     }
-
 }

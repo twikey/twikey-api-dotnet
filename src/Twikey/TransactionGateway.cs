@@ -1,4 +1,3 @@
-using Twikey.ICallback;
 using System.Collections.Generic;
 using System;
 using System.Net.Http;
@@ -8,7 +7,7 @@ using Newtonsoft.Json;
 using System.IO;
 using System.Text;
 using System.Net.Http.Headers;
-using Twikey.Models.Transactions;
+using Twikey.Model;
 
 namespace Twikey
 {
@@ -18,25 +17,20 @@ namespace Twikey
 
         /// <param name="mandateNumber">required</param>
         /// <param name="transactionDetails">map with keys (message,ref,amount,place)</param>
-        /// <returns>json object containing 
-        ///                     {
-        ///                       "contractId": 325638,
-        ///                       "mndtId": "MNDT123",
-        ///                       "contract": "Algemene voorwaarden",
-        ///                       "amount": 10.0,
-        ///                       "id": 381563,
-        ///                       "msg": "Monthly payment",
-        ///                       "place": null,
-        ///                       "ref": null,
-        ///                       "date": "2017-09-16T14:32:05Z"
-        ///                     }
-        /// </returns>
+        /// <returns cref="TransactionEntry">TransactionEntry</returns>
         /// <exception cref="IOException">When no connection could be made</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        public JObject Create(String mandateNumber, Dictionary<string, string> transactionDetails)
+        public Twikey.Model.TransactionEntry Create(String mandateNumber, TransactionRequest transactionDetails)
         {
-            Dictionary<string, string> parameters = CreateParameters(transactionDetails);
+            var parameters = new Dictionary<string, string>();
             AddIfExists(parameters, "mndtId", mandateNumber);
+            AddIfExists(parameters, "message", transactionDetails.Message);
+            AddIfExists(parameters, "amount", transactionDetails.Amount);
+            AddIfExists(parameters, "ref", transactionDetails.Reference);
+            AddIfExists(parameters, "place", transactionDetails.Place);
+            AddIfExists(parameters, "refase2e", transactionDetails.Refase2e);
+            AddIfExists(parameters, "date", transactionDetails.Date);
+            AddIfExists(parameters, "reqcolldt", transactionDetails.Reqcolldt);
 
             HttpRequestMessage request = new HttpRequestMessage();
             request.RequestUri = _twikeyClient.GetUrl("/transaction");
@@ -49,48 +43,25 @@ namespace Twikey
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
-                {
-
-                    JObject obj = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                    JArray entries = JArray.FromObject(obj["Entries"]);
-                    return (JObject)entries[0];
-                }
-            }
-
-            String apiError = response.Headers.GetValues("ApiError").First<string>();
-            throw new TwikeyClient.UserException(apiError);
-
-        }
-
-        public Transaction CreateTransaction(TransactionEntry transaction)
-        {
-            HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = _twikeyClient.GetUrl("/transaction");
-            request.Method = HttpMethod.Post;
-            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
-
-            var json = JsonConvert.SerializeObject(transaction);
-            var dict = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-
-            request.Content = new FormUrlEncodedContent(dict);
-
-            HttpResponseMessage response = _twikeyClient.Send(request);
-
-            if (response.StatusCode == System.Net.HttpStatusCode.OK)
-            {
                 var responseString = response.Content.ReadAsStringAsync().Result;
-                return JsonConvert.DeserializeObject<Transaction>(responseString);
+                var tx = JsonConvert.DeserializeObject<Transaction>(responseString);
+                return tx.Entries.ElementAtOrDefault(0);
             }
-            string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+
+            String apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
             throw new TwikeyClient.UserException(apiError);
         }
 
-        public IEnumerable<TransactionEntry> Feed()
+        public IEnumerable<TransactionEntry> Feed(params string[] sideloads)
         {
-            var transactionEntries = new List<TransactionEntry>();
-            Uri myUrl = _twikeyClient.GetUrl("/transaction");
+            string url = "/transaction";
+            if(sideloads != null && sideloads.Length != 0)
+            {
+                var extra = Array.ConvertAll(sideloads, sideload => "include="+sideload.ToString());
+                url += "?" + string.Join("&",extra);
+            }
+
+            Uri myUrl = _twikeyClient.GetUrl(url);
             bool isEmpty;
             do
             {
@@ -105,7 +76,10 @@ namespace Twikey
                 {
                     var responseText = response.Content.ReadAsStringAsync().Result;
                     var feed = JsonConvert.DeserializeObject<Transaction>(responseText);
-                    transactionEntries.AddRange(feed.Entries);
+                    foreach(var tx in feed.Entries)
+                    {
+                        yield return tx;
+                    }
                     isEmpty = !feed.Entries.Any();
                 }
                 else
@@ -114,51 +88,7 @@ namespace Twikey
                     throw new TwikeyClient.UserException(apiError);
                 }
             } while (!isEmpty);
-            return transactionEntries;
+            yield break;
         }
-
-        /// <param name="transactionCallback">Callback for every change</param>
-        /// <exception cref="IOException">When a network issue happened</exception>
-        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public void Feed(ITransactionCallback transactionCallback)
-        {
-            Uri myUrl = _twikeyClient.GetUrl("/transaction");
-            bool isEmpty;
-            do
-            {
-                HttpRequestMessage request = new HttpRequestMessage();
-                request.RequestUri = myUrl;
-                request.Method = HttpMethod.Get;
-                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
-
-                HttpResponseMessage response = _twikeyClient.Send(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    using (Stream contentStream = response.Content.ReadAsStreamAsync().Result)
-                    {
-                        JObject json = JObject.Load(new JsonTextReader(new StreamReader(contentStream)));
-                        JArray entries = JArray.FromObject(json["Entries"]);
-                        isEmpty = entries.Count == 0;
-                        if (!isEmpty)
-                        {
-                            for (int i = 0; i < entries.Count; i++)
-                            {
-                                JObject obj = (JObject)entries[i];
-                                transactionCallback.Transaction(obj);
-                            }
-                        }
-                    }
-
-                }
-                else
-                {
-                    String apiError = response.Headers.GetValues("ApiError").First<string>();
-                    throw new TwikeyClient.UserException(apiError);
-                }
-            } while (!isEmpty);
-
-        }
-
     }
 }
