@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Twikey.Models.Mandates
+namespace Twikey.Model
 {
     internal class MandateFeed
     {
@@ -27,6 +27,21 @@ namespace Twikey.Models.Mandates
         public string CreditorSchemeId { get; set; }
         [JsonProperty("EvtTime")]
         public DateTime? EventTime { get; set; }
+
+        public bool IsNew()
+        {
+            return AmendmentReason == null && CancellationReason == null;
+        }
+
+        public bool IsUpdated()
+        {
+            return AmendmentReason != null;
+        }
+
+        public bool IsCancelled()
+        {
+            return CancellationReason != null;
+        }
     }
 
     public class Groupheader

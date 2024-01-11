@@ -72,7 +72,7 @@ Invite a customer to sign a SEPA mandate using a specific behaviour template (ct
 the behaviour or flow that the customer will experience. This 'ct' can be found in the template section of the settings.
 
 ```csharp
-Customer customer = new Customer()
+var customer = new Customer()
 {
     CustomerNumber = "customerNum123",
     Email = "no-reply@example.com",
@@ -85,13 +85,12 @@ Customer customer = new Customer()
     Lang = "nl",
     Mobile = "32412345678"
 };
-Dictionary<string,string> extraParams = ...;
-long ct = ...; 
-
-JObject invite = twikeyClient.Document.Create(ct, customer, extraParams); 
+var profile = 123; // Profile to use
+var request = new MandateRequest(profile); // Can contain optional account data
+SignableMandate invite = twikeyClient.Document.Create(customer, request); 
 ```
 
-_After creation, the link available in invite['url'] can be used to redirect the customer into the signing flow or even 
+_After creation, the link available in invite.Url can be used to redirect the customer into the signing flow or even 
 send him a link through any other mechanism. Ideally you store the mandatenumber for future usage (eg. sending transactions)._
 
 
@@ -99,23 +98,29 @@ send him a link through any other mechanism. Ideally you store the mandatenumber
 
 
 ```csharp
-//Implement this interface to work with response from Twikey
-//JObject -> Newtonsoft.Json.Linq
-public interface DocumentCallback 
+//Generator to work with response from Twikey
+foreach(var mandateUpdate in twikeyClient.Document.Feed())
 {
-    void NewDocument(JObject newDocument);
-    void UpdatedDocument(JObject updatedDocument);
-    void CancelledDocument(JObject cancelledDocument);
+    if(mandateUpdate.IsNew())
+    {
+        Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+    }
+    else if(mandateUpdate.IsUpdated())
+    {
+        Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+    }
+    else if(mandateUpdate.IsCancelled())
+    {
+        Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+    }
 }
-
-twikeyClient.Document.Feed(new DocumentCallbackImpl());
 ```
 
 ## Invoices
 Create new invoices 
 
 ```csharp
-Customer customer = new Customer()
+var customer = new Customer()
 {
     CustomerNumber = "customerNum123",
     Email = "no-reply@example.com",
@@ -128,15 +133,17 @@ Customer customer = new Customer()
     Lang = "nl",
     Mobile = "32412345678"
 };
-Dictionary<string, string> invoiceDetails = new Dictionary<string,string>();
-invoiceDetails.Add("number", "Invss123");
-invoiceDetails.Add("title", "Invoice April");
-invoiceDetails.Add("remittance", s_testVersion);
-invoiceDetails.Add("amount", "10.90");
-invoiceDetails.Add("date", "2020-03-20");
-invoiceDetails.Add("duedate", "2020-04-28");
 
-twikeyClient.Invoice.Create(_ct, _customer, invoiceDetails);
+var invoice = new Invoice()
+{
+    Number = "Invoice 123",
+    Title = "Invoice April",
+    Remittance = "123564984",
+    Amount = 10.90,
+    Date = DateTime.Now,
+    Duedate = DateTime.Now.AddDays(30),
+};
+twikeyClient.Invoice.Create(customer, invoice);
 ```
 
 ### Feed
@@ -144,14 +151,11 @@ twikeyClient.Invoice.Create(_ct, _customer, invoiceDetails);
 Retrieve the list of updates on invoices that had changes since the last call.
 
 ```csharp
-//Implement this interface to work with response from Twikey
-//JObject -> Newtonsoft.Json.Linq
-public interface IInvoiceCallback
+//Generator to work with response from Twikey
+foreach(var invoice in twikeyClient.Invoice.Feed())
 {
-    void Invoice(JObject updatedInvoice);
+    Console.WriteLine("Updated invoice: " + invoice);
 }
-
-twikeyClient.Invoice.Feed(new InvoiceCallbackImpl());
 ```
 
 ## Paymentlinks
@@ -160,12 +164,8 @@ Create a payment link
 **You need an integration like for example iDeal**
 
 ```csharp
-Dictionary<string,string> paylinkDetails = new Dictionary<string, string>();
-paylinkDetails.Add("message",s_testVersion);
-paylinkDetails.Add("amount","1");
-long _ct = ...;
-
-twikeyClient.Paylink.Create(_ct, _customepaylinkDetails);
+var request = new PaylinkRequest("Your payment", 10.55);
+twikeyClient.Paylink.Create(customer, request);
 
 ```
 
@@ -174,14 +174,19 @@ twikeyClient.Paylink.Create(_ct, _customepaylinkDetails);
 Get payment link feed since the last retrieval
 
 ```csharp
-//Implement this interface to work with response from Twikey
-//JObject -> Newtonsoft.Json.Linq
-public interface IPaylinkCallback
+//Generator to work with response from Twikey
+foreach(var link in twikeyClient.Paylink.Feed())
 {
-    void Paylink(JObject paylink);
+   if(link.IsPaid())
+   {
+     Console.WriteLine("Paid paylink: " + link);
+   }
+   else
+   {
+     Console.WriteLine("Updated Paylink: " + link);
+   }
 }
 
-twikeyClient.Paylink.Feed(new PaylinkCallbackImpl());
 ```
 
 ## Transactions
@@ -189,26 +194,19 @@ twikeyClient.Paylink.Feed(new PaylinkCallbackImpl());
 Send new transactions and act upon feedback from the bank.
 
 ```csharp
-
-Dictionary<string,string> transactionDetails = new Dictionary<string, string>();
-transactionDetails.Add("message","My invoice 123");
-transactionDetails.Add("ref","My internal reference 123");
-transactionDetails.Add("amount","10.00");
-
-twikeyClient.Transaction.Create(mandateNumber, transactionDetails);
+var request = new TransactionRequest("MyMessage",10.55);
+twikeyClient.Transaction.Create(mandateNumber, request);
 ```
 
 ### Feed
 
 ```csharp
-//Implement this interface to work with response from Twikey
-//JObject -> Newtonsoft.Json.Linq
-public interface ITransactionCallback
+//Generator to work with response from Twikey
+foreach(var transaction in twikeyClient.Transaction.Feed())
 {
-    void Transaction(JObject transaction);
+    Console.WriteLine("Updated Transaction: " + transaction);
 }
 
-twikeyClient.Transaction.Feed(new TransactionCallbackImpl());
 ```
 
 ## Webhook ##
