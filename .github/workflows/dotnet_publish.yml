@@ -14,13 +14,15 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: 3.1.x
+        dotnet-version: | 
+          3.1.x
+          5.0.x
 
     - name: Restore dependencies
-      run: dotnet restore src/Twikey 
+      run: dotnet restore src/Twikey && dotnet restore src/TwikeyTests
 
     - name: Build
-      run: dotnet build src/Twikey --no-restore 
+      run: dotnet build src/Twikey --no-restore && dotnet build src/TwikeyTests --no-restore
 
     - name: Publish
       run: (tmpDir=$(mktemp -d) && dotnet pack --no-build src/Twikey --output $tmpDir && dotnet nuget push "$tmpDir/$(ls $tmpDir)" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json); rm -rf $tmpDir
