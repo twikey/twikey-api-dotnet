@@ -113,5 +113,25 @@ namespace Twikey
                 }
             } while (!isEmpty);
         }
+
+        public void CancelMandate(string mandateId, string reason, bool notify = false)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "notify=true" : string.Empty)}");
+            request.Method = HttpMethod.Delete;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = _twikeyClient.Send(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return;
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
     }
 }
