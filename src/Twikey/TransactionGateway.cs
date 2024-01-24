@@ -8,6 +8,7 @@ using System.IO;
 using System.Text;
 using System.Net.Http.Headers;
 using Twikey.Model;
+using static Twikey.TwikeyClient;
 
 namespace Twikey
 {
@@ -89,6 +90,34 @@ namespace Twikey
                 }
             } while (!isEmpty);
             yield break;
+        }
+
+        public void RemoveTransaction(string id = null, string reference = null)
+        {
+            if (string.IsNullOrWhiteSpace(id) && string.IsNullOrWhiteSpace(reference))
+                throw new UserException("Either id or reference must be provided");
+            var p = new List<string>();
+            if (!string.IsNullOrWhiteSpace(id))
+                p.Add($"id={id}");
+            if (!string.IsNullOrWhiteSpace(reference))
+                p.Add($"ref={reference}");
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/transaction?{string.Join("&", p)}");
+            request.Method = HttpMethod.Delete;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = _twikeyClient.Send(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return;
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
         }
     }
 }
