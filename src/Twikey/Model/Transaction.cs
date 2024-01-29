@@ -42,6 +42,21 @@ namespace Twikey.Model
 
         [JsonProperty("date", NullValueHandling = NullValueHandling.Ignore)]
         public DateTime? Date { get; set; }
+
+        [JsonProperty("final", NullValueHandling = NullValueHandling.Ignore)]
+        public bool IsFinal { get; set; }
+
+        [JsonProperty("state", NullValueHandling = NullValueHandling.Ignore)]
+        public string State { get; set; }
+
+        [JsonProperty("bkdate", NullValueHandling = NullValueHandling.Ignore)]
+        public DateTime? BKDate { get; set; }
+
+        [JsonProperty("bkerror", NullValueHandling = NullValueHandling.Ignore)]
+        public string BKError { get; set; }
+
+        [JsonProperty("bkmsg", NullValueHandling = NullValueHandling.Ignore)]
+        public string BKMessage { get; set; }
     }
 
     public class TransactionRequest
