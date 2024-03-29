@@ -99,5 +99,7 @@ namespace Twikey.Model
         /// Template to use can be found @ https://www.twikey.com/r/admin#/c/template
         /// </summary>
         public string Tc { get; set; }
+
+        public string IdempotencyKey { get; set; }
     }
 }

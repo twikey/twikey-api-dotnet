@@ -58,6 +58,9 @@ namespace Twikey
             request.Method = HttpMethod.Post;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+            if (!String.IsNullOrEmpty(linkrequest.IdempotencyKey)){
+                request.Headers.Add("Idempotency-Key", linkrequest.IdempotencyKey);
+            }
 
             request.Content = new FormUrlEncodedContent(parameters);
             HttpResponseMessage response = _twikeyClient.Send(request);
