@@ -15,7 +15,7 @@ namespace Twikey
         private static readonly string s_defaultUserHeader = "twikey/.net-0.1.0";
         private static readonly string s_prodEnvironment = "https://api.twikey.com/creditor";
         private static readonly string s_testEnvironment = "https://api.beta.twikey.com/creditor";
-        private static readonly long s_maxSessionAge = 23 * 60 * 60 * 60; // max 1day, but use 23 to be safe
+        private static readonly long s_maxSessionAge = 23 * 60 * 60 * 1000; // max 1day, but use 23 to be safe
         private static readonly HttpClient s_client = new HttpClient();
         private static readonly string s_saltOwn = "own";
         private readonly string _apiKey;
@@ -89,16 +89,13 @@ namespace Twikey
                     _lastLogin = 0L;
                     throw new UnauthenticatedException(e);
                 }
-
             }
-
             return _sessionToken;
         }
 
         public Uri GetUrl(string path)
         {
             return new Uri(String.Format("{0}{1}", _endpoint, path));
-
         }
 
         public class UserException : Exception
@@ -156,7 +153,6 @@ namespace Twikey
                 }
                 return equal;
             }
-
         }
 
         /// <param name="websitekey">Provided in Settings - Website</param>

@@ -82,5 +82,7 @@ namespace Twikey.Model
         /// Optional should we use the inital reference as identifier with the bank
         /// </summary>
         public bool Refase2e { get; set; }
+
+        public string IdempotencyKey { get; set; }
     }
 }
