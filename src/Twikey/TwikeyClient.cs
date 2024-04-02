@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Web;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Twikey
 {
@@ -61,7 +62,7 @@ namespace Twikey
             return this;
         }
 
-        protected internal string GetSessionToken()
+        protected internal async Task<string> GetSessionToken()
         {
             if ((JMethods.CurrentTimeMillis() - _lastLogin) > s_maxSessionAge)
             {
@@ -78,7 +79,7 @@ namespace Twikey
                 }
                 request.Content = new FormUrlEncodedContent(parameters);
 
-                HttpResponseMessage response = s_client.SendAsync(request).Result;
+                HttpResponseMessage response = await s_client.SendAsync(request);
                 try
                 {
                     _sessionToken = response.Headers.GetValues("Authorization").First<string>();
@@ -234,7 +235,12 @@ namespace Twikey
 
         public HttpResponseMessage Send(HttpRequestMessage request)
         {
-            return s_client.SendAsync(request).Result;
+            return SendAsync(request).Result;
+        }
+
+        public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
+        {
+            return await s_client.SendAsync(request);
         }
     }
 

@@ -7,6 +7,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.Text;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Twikey
 {
@@ -22,6 +23,17 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public Invoice Create(long ct, Customer customer, Invoice invoice)
         {
+            return CreateAsync(ct, customer, invoice).Result;
+        }
+
+        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
+        /// <param name="customer">Customer details</param>
+        /// <param name="invoiceDetails">Details specific to the invoice</param>
+        /// <returns cref="Invoice">Saved invoice</returns>
+        /// <exception cref="IOException">When no connection could be made</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
+        public async Task<Invoice> CreateAsync(long ct, Customer customer, Invoice invoice)
+        {
             if(customer != null)
             {
                 invoice.Customer = customer;
@@ -36,19 +48,19 @@ namespace Twikey
             request.RequestUri = _twikeyClient.GetUrl("/invoice");
             request.Method = HttpMethod.Post;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
 
             var invoice_string = JsonConvert.SerializeObject(invoice, Formatting.Indented);
             request.Content = new StringContent(invoice_string, Encoding.UTF8, TwikeyClient.JSON);
 
-            HttpResponseMessage response = _twikeyClient.Send(request);
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var responseString = response.Content.ReadAsStringAsync().Result;
+                var responseString = await response.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<Invoice>(responseString);
             }
 
-            String apiError = response.Headers.GetValues("ApiError").First<string>();
+            string apiError = response.Headers.GetValues("ApiError").First();
             throw new TwikeyClient.UserException(apiError);
         }
 
@@ -58,6 +70,25 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
         public IEnumerable<Invoice> Feed(params string[] sideloads)
         {
+            bool isEmpty;
+            do
+            {
+                var invoices = FeedAsync(sideloads).Result;
+
+                foreach (var invoice in invoices)
+                {
+                    yield return invoice;
+                }
+                isEmpty = !invoices.Any();
+            } while (!isEmpty);
+        }
+
+        // Get updates about all invoices (new/updated/cancelled)
+        /// <param name="invoiceCallback">Callback for every change</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public async Task<IEnumerable<Invoice>> FeedAsync(params string[] sideloads)
+        {
             string url = "/invoice";
             if(sideloads != null && sideloads.Length != 0)
             {
@@ -66,32 +97,26 @@ namespace Twikey
             }
 
             Uri myUrl = _twikeyClient.GetUrl(url);
-            bool isEmpty;
-            do
-            {
+            
                 HttpRequestMessage request = new HttpRequestMessage();
                 request.RequestUri = myUrl;
                 request.Method = HttpMethod.Get;
                 request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+                request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
 
-                HttpResponseMessage response = _twikeyClient.Send(request);
+                HttpResponseMessage response = await _twikeyClient.SendAsync(request);
                 if (response.StatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    var responseString = response.Content.ReadAsStringAsync().Result;
+                    var responseString = await response.Content.ReadAsStringAsync();
                     var feed = JsonConvert.DeserializeObject<InvoiceUpdates>(responseString);
-                    foreach(var invoice in feed.Invoices)
-                    {
-                        yield return invoice;
-                    }
-                    isEmpty = !feed.Invoices.Any();
+                    return feed.Invoices;
                 }
                 else
                 {
-                    String apiError = response.Headers.GetValues("ApiError").First<string>();
+                    string apiError = response.Headers.GetValues("ApiError").First();
                     throw new TwikeyClient.UserException(apiError);
                 }
-            } while (!isEmpty);
+            
         }
     }
 }
