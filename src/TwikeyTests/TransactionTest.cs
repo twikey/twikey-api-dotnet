@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace TwikeyAPITests
 {
@@ -64,6 +65,32 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestCreateTransaction()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            if (_mandateNumber == null)
+            {
+                Assert.Inconclusive("mandateNumber is null");
+                return;
+            }
+            var request = new TransactionRequest("MyMessage", 10.55);
+            // Optional though recommended
+            request.Reference = s_testVersion;
+            // Optional
+            request.Date = DateTime.Now;
+            request.Reqcolldt = DateTime.Now;
+            request.Place = "MyTest";
+            request.Refase2e = true;
+
+            var transaction = await _api.Transaction.CreateAsync(_mandateNumber, request);
+            Console.WriteLine("New transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+        }
+
+        [TestMethod]
         public void GetTransactionAndDetails(){
             if (_apiKey == null)
             {
@@ -71,6 +98,20 @@ namespace TwikeyAPITests
                 return;
             }
             foreach(var transaction in _api.Transaction.Feed())
+            {
+                Console.WriteLine("Transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetTransactionAndDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var transaction in await _api.Transaction.FeedAsync())
             {
                 Console.WriteLine("Transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
             }
