@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace TwikeyAPITests
 {
@@ -50,6 +51,18 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestInviteMandateWithoutCustomerDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            var signableMandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
+            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+        }
+
+        [TestMethod]
         public void TestInviteMandateWithCustomerDetailsNullAndEmptyFields()
         {
             if (_apiKey == null)
@@ -72,6 +85,28 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestInviteMandateWithCustomerDetailsNullAndEmptyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                CustomerNumber = s_testVersion,
+                Email = null,
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+            var signableMandate = await _api.Document.CreateAsync(customer, new MandateRequest(_ct));
+            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+        }
+
+        [TestMethod]
         public void TestInviteMandateCustomerDetails()
         {
             if (_apiKey == null)
@@ -80,6 +115,18 @@ namespace TwikeyAPITests
                 return;
             }
             var signableMandate = _api.Document.Create(_customer, new MandateRequest(_ct));
+            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+        }
+
+        [TestMethod]
+        public async Task AsyncTestInviteMandateCustomerDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            var signableMandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
             Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
         }
 
@@ -101,6 +148,31 @@ namespace TwikeyAPITests
                     Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
                 }
                 else if(mandateUpdate.IsCancelled())
+                {
+                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetMandatesAndDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var mandateUpdate in await _api.Document.FeedAsync())
+            {
+                if (mandateUpdate.IsNew())
+                {
+                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsUpdated())
+                {
+                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsCancelled())
                 {
                     Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
                 }
@@ -132,6 +204,31 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncGetMandatesAndDetailsCreditCard()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var mandateUpdate in await _api.Document.FeedAsync("CREDITCARD"))
+            {
+                if (mandateUpdate.IsNew())
+                {
+                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsUpdated())
+                {
+                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsCancelled())
+                {
+                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+            }
+        }
+
+        [TestMethod]
         public void GetMandatesAndDetailsCreditCardAndWIK(){
             if (_apiKey == null)
             {
@@ -149,6 +246,31 @@ namespace TwikeyAPITests
                     Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
                 }
                 else if(mandateUpdate.IsCancelled())
+                {
+                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetMandatesAndDetailsCreditCardAndWIK()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var mandateUpdate in await _api.Document.FeedAsync("CREDITCARD", "WIK"))
+            {
+                if (mandateUpdate.IsNew())
+                {
+                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsUpdated())
+                {
+                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
+                }
+                else if (mandateUpdate.IsCancelled())
                 {
                     Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
                 }
