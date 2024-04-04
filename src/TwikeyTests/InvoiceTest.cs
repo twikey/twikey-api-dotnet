@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace TwikeyAPITests
 {
@@ -60,6 +61,28 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestCreateInvoice()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            var invoice = new Invoice()
+            {
+                Number = "Invoice" + DateTime.Now.ToString("yyyyMMdd"),
+                Title = "Invoice April",
+                Remittance = s_testVersion,
+                Amount = 10.90,
+                Date = DateTime.Now,
+                Duedate = DateTime.Now.AddDays(30),
+            };
+
+            invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
+            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+        }
+
+        [TestMethod]
         public void TestCreateInvoiceWithCustomerNullEmtpyFields()
         {
             if (_apiKey == null)
@@ -93,6 +116,39 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestCreateInvoiceWithCustomerNullEmtpyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            Customer customer = new Customer()
+            {
+                Email = "no-reply@example.com",
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000",
+                Mobile = null
+            };
+            var invoice = new Invoice()
+            {
+                Number = "Invoice-2-" + DateTime.Now.ToString("yyyyMMdd"),
+                Title = "Invoice April",
+                Remittance = s_testVersion,
+                Amount = 10.90,
+                Date = DateTime.Now,
+                Duedate = DateTime.Now.AddDays(30),
+                Customer = customer,
+            };
+
+            invoice = await _api.Invoice.CreateAsync(_ct, customer, invoice);
+            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+        }
+
+        [TestMethod]
         public void GetInvoiceAndDetails(){
             if (_apiKey == null)
             {
@@ -100,6 +156,20 @@ namespace TwikeyAPITests
                 return;
             }
             foreach(var invoice in _api.Invoice.Feed())
+            {
+                Console.WriteLine("Updated invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetInvoiceAndDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var invoice in await _api.Invoice.FeedAsync())
             {
                 Console.WriteLine("Updated invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
             }

@@ -18,7 +18,7 @@ payment options of your favorite PSP to allow other customers to pay as well.
 To use the Twikey API client, the following things are required:
 
 + Get yourself a [Twikey account](https://www.twikey.com).
-+ .NET core >= 3.1.0
++ .NET core >= 5.0
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
 ## Installation 
@@ -87,7 +87,7 @@ var customer = new Customer()
 };
 var profile = 123; // Profile to use
 var request = new MandateRequest(profile); // Can contain optional account data
-SignableMandate invite = twikeyClient.Document.Create(customer, request); 
+SignableMandate invite = await twikeyClient.Document.CreateAsync(customer, request); 
 ```
 
 _After creation, the link available in invite.Url can be used to redirect the customer into the signing flow or even 
@@ -99,7 +99,7 @@ send him a link through any other mechanism. Ideally you store the mandatenumber
 
 ```csharp
 //Generator to work with response from Twikey
-foreach(var mandateUpdate in twikeyClient.Document.Feed())
+foreach(var mandateUpdate in await twikeyClient.Document.FeedAsync())
 {
     if(mandateUpdate.IsNew())
     {
@@ -143,7 +143,7 @@ var invoice = new Invoice()
     Date = DateTime.Now,
     Duedate = DateTime.Now.AddDays(30),
 };
-twikeyClient.Invoice.Create(customer, invoice);
+await twikeyClient.Invoice.CreateAsync(customer, invoice);
 ```
 
 ### Feed
@@ -152,7 +152,7 @@ Retrieve the list of updates on invoices that had changes since the last call.
 
 ```csharp
 //Generator to work with response from Twikey
-foreach(var invoice in twikeyClient.Invoice.Feed())
+foreach(var invoice in await twikeyClient.Invoice.FeedAsync())
 {
     Console.WriteLine("Updated invoice: " + invoice);
 }
@@ -161,11 +161,11 @@ foreach(var invoice in twikeyClient.Invoice.Feed())
 ## Paymentlinks
 Create a payment link 
 
-**You need an integration like for example iDeal**
+**You need an integration, for example iDeal**
 
 ```csharp
 var request = new PaylinkRequest("Your payment", 10.55);
-twikeyClient.Paylink.Create(customer, request);
+await twikeyClient.Paylink.CreateAsync(customer, request);
 
 ```
 
@@ -175,7 +175,7 @@ Get payment link feed since the last retrieval
 
 ```csharp
 //Generator to work with response from Twikey
-foreach(var link in twikeyClient.Paylink.Feed())
+foreach(var link in await twikeyClient.Paylink.FeedAsync())
 {
    if(link.IsPaid())
    {
@@ -195,14 +195,14 @@ Send new transactions and act upon feedback from the bank.
 
 ```csharp
 var request = new TransactionRequest("MyMessage",10.55);
-twikeyClient.Transaction.Create(mandateNumber, request);
+await twikeyClient.Transaction.CreateAsync(mandateNumber, request);
 ```
 
 ### Feed
 
 ```csharp
 //Generator to work with response from Twikey
-foreach(var transaction in twikeyClient.Transaction.Feed())
+foreach(var transaction in await twikeyClient.Transaction.FeedAsync())
 {
     Console.WriteLine("Updated Transaction: " + transaction);
 }
@@ -229,7 +229,7 @@ private string ParseTwiKeyCreateQuerySubString()
     }
     return queryParameters;
 }
-string incomingSignature = Request.Headers["X-SIGNATURE"].First<string>();
+string incomingSignature = Request.Headers["X-SIGNATURE"].First();
 
 // query parameter needs to be in the following format "msg=dummytest&type=event"
 string payload = ParseTwiKeyCreateQuerySubString();

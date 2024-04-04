@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace TwikeyAPITests
 {
@@ -54,6 +55,24 @@ namespace TwikeyAPITests
             Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
         }
 
+        // Needs integration in Twikey for example iDeal
+        [TestMethod]
+        public async Task AsyncTestCreatePaylink()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            var request = new PaylinkRequest("Your payment", 10.55)
+            {
+                Remittance = s_testVersion,
+                Ct = _ct,
+            };
+            var link = await _api.Paylink.CreateAsync(_customer, request);
+            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+        }
+
         [TestMethod]
         public void TestCreatePaylinkWithCustomerNullEmptyFields()
         {
@@ -81,6 +100,32 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
+        public async Task AsyncTestCreatePaylinkWithCustomerNullEmptyFields()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            Customer customer = new Customer()
+            {
+                Email = null,
+                Firstname = "Twikey",
+                Lastname = "Support",
+                Street = "Derbystraat 43",
+                City = "Gent",
+                Zip = "9000"
+            };
+
+            var request = new PaylinkRequest("Your payment", 10.55);
+            request.Remittance = s_testVersion;
+
+            var link = await _api.Paylink.CreateAsync(customer, request);
+            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+        }
+
+        [TestMethod]
         public void GetPaylinkAndDetails(){
             if (_apiKey == null)
             {
@@ -90,6 +135,27 @@ namespace TwikeyAPITests
             foreach(var link in _api.Paylink.Feed())
             {
                 if(link.IsPaid())
+                {
+                    Console.WriteLine("Paid paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
+                }
+                else
+                {
+                    Console.WriteLine("Paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
+                }
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetPaylinkAndDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+            foreach (var link in await _api.Paylink.FeedAsync())
+            {
+                if (link.IsPaid())
                 {
                     Console.WriteLine("Paid paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
                 }

@@ -6,6 +6,7 @@ using System.Linq;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Twikey
 {
@@ -18,6 +19,15 @@ namespace Twikey
         /// <exception cref="IOException">When no connection could be made</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
         public Paylink Create(Customer customer, PaylinkRequest linkrequest)
+        {
+            return CreateAsync(customer, linkrequest).Result;
+        }
+
+        /// <param name="customer">Customer details</param>
+        /// <param name="request">Request containing the specifics of the link</param>
+        /// <exception cref="IOException">When no connection could be made</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
+        public async Task<Paylink> CreateAsync(Customer customer, PaylinkRequest linkrequest)
         {
             var parameters = new Dictionary<string, string>();
             AddIfExists(parameters,"ct", linkrequest.Ct);
@@ -57,21 +67,21 @@ namespace Twikey
             request.RequestUri = _twikeyClient.GetUrl("/payment/link");
             request.Method = HttpMethod.Post;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-            request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
-            if (!String.IsNullOrEmpty(linkrequest.IdempotencyKey)){
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+            if (!string.IsNullOrEmpty(linkrequest.IdempotencyKey)){
                 request.Headers.Add("Idempotency-Key", linkrequest.IdempotencyKey);
             }
 
             request.Content = new FormUrlEncodedContent(parameters);
-            HttpResponseMessage response = _twikeyClient.Send(request);
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
 
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var responseString = response.Content.ReadAsStringAsync().Result;
+                var responseString = await response.Content.ReadAsStringAsync();
                 return JsonConvert.DeserializeObject<Paylink>(responseString);
             }
 
-            String apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+            string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
             throw new TwikeyClient.UserException(apiError);
         }
 
@@ -81,6 +91,26 @@ namespace Twikey
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
         public IEnumerable<Paylink> Feed(params string[] sideloads)
         {
+            bool isEmpty;
+            do
+            {
+                var links = FeedAsync(sideloads).Result;
+
+                foreach(var link in links)
+                {
+                    yield return link;
+                }
+                isEmpty = !links.Any();
+            } while (!isEmpty);
+        }
+
+
+        /// Get updates about all links
+        /// <param name="paylinkCallback">Callback for every change</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public async Task<IEnumerable<Paylink>> FeedAsync(params string[] sideloads)
+        {
             string url = "/payment/link/feed";
             if(sideloads != null && sideloads.Length != 0)
             {
@@ -89,32 +119,25 @@ namespace Twikey
             }
 
             Uri myUrl = _twikeyClient.GetUrl(url);
-            bool isEmpty;
-            do
-            {
-                HttpRequestMessage request = new HttpRequestMessage();
-                request.RequestUri = myUrl;
-                request.Method = HttpMethod.Get;
-                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-                request.Headers.Add("Authorization", _twikeyClient.GetSessionToken());
+            
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = myUrl;
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
 
-                HttpResponseMessage response = _twikeyClient.Send(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
-                {
-                    var responseText = response.Content.ReadAsStringAsync().Result;
-                    var feed = JsonConvert.DeserializeObject<Paylinks>(responseText);
-                    foreach(var _paylink in feed.Links)
-                    {
-                        yield return _paylink;
-                    }
-                    isEmpty = !feed.Links.Any();
-                }
-                else
-                {
-                    String apiError = response.Headers.GetValues("ApiError").First<string>();
-                    throw new TwikeyClient.UserException(apiError);
-                }
-            } while (!isEmpty);
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseText = await response.Content.ReadAsStringAsync();
+                var feed = JsonConvert.DeserializeObject<Paylinks>(responseText);
+                return feed.Links;
+            }
+            else
+            {
+                string apiError = response.Headers.GetValues("ApiError").First();
+                throw new TwikeyClient.UserException(apiError);
+            }
         }
     }
 }
