@@ -332,5 +332,37 @@ namespace TwikeyAPITests
 
             await _api.Document.CancelMandateAsync(mandate.MandateNumber, "test", true);
         }
+
+        [TestMethod]
+        public void GetMandateDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var mandate = _api.Document.Create(_customer, new MandateRequest(_ct));
+
+            var details = _api.Document.Details(mandate.MandateNumber, true);
+
+            Console.WriteLine("Mandate details:" + details);
+        }
+
+        [TestMethod]
+        public async Task Async_GetMandateDetails()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var mandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
+
+            var details = await _api.Document.DetailsAsync(mandate.MandateNumber, true);
+
+            Console.WriteLine("Mandate details:" + details);
+        }
     }
 }

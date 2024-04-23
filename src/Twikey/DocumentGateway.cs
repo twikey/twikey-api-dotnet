@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using Twikey.Model;
@@ -177,6 +176,51 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 return;
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
+
+        /// <inheritdoc cref="DetailsAsync(string,bool)"/>
+        public MandateDetails Details(string mandateId, bool force)
+        {
+            return DetailsAsync(mandateId, force).Result;
+        }
+
+        /// <summary>
+        /// Retrieve details of a specific mandate. Since the structure of the mandate is the same as in the update feed but doesn't include details about state, 2 extra headers are added.
+        /// Note: Rate limits apply, though this is perfect for one-offs, for updates we recommend using the feed(see above).
+        /// </summary>
+        /// <param name="mandateId">Mandate Reference</param>
+        /// <param name="force">Also include non-signed states</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while cancelling the mandate (eg. invalid apikey)</exception>
+        /// <returns>The details of the mandate</returns>
+        public async Task<MandateDetails> DetailsAsync(string mandateId, bool force)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate/detail?mndtId={mandateId}{(force ? "&force=true" : "")}");
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var mandate = JsonConvert.DeserializeObject<MandateDetailResponse>(responseString);
+                var state = response.Headers.GetValues("X-STATE").FirstOrDefault();
+                var collectable = response.Headers.GetValues("X-COLLECTABLE").FirstOrDefault();
+
+                return new MandateDetails
+                {
+                    State = state,
+                    Collectable = collectable,
+                    Mandate = mandate.Mndt
+                };
             }
             else
             {
