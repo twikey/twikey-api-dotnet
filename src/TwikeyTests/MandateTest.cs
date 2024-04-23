@@ -1,10 +1,10 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using Newtonsoft.Json;
 using System.Threading.Tasks;
+using System.Linq;
 
 namespace TwikeyAPITests
 {
@@ -363,6 +363,52 @@ namespace TwikeyAPITests
             var details = await _api.Document.DetailsAsync(mandate.MandateNumber, true);
 
             Console.WriteLine("Mandate details:" + details);
+        }
+
+        [TestMethod]
+        public void GetMandatePdf()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var mandate = _api.Document.Create(_customer, new MandateRequest(_ct));
+
+            try
+            {
+                var pdfError = _api.Document.Pdf(mandate.MandateNumber);
+            }
+            catch (AggregateException ex)
+            {
+                if (ex.InnerExceptions.Single().Message != "err_no_contract") throw;
+
+                Console.WriteLine("Mandate has no contract, but endpoint was reached");
+            }
+        }
+
+        [TestMethod]
+        public async Task AsyncGetMandatePdf()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var mandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
+
+            try
+            {
+                var pdfError = await _api.Document.PdfAsync(mandate.MandateNumber);
+            }
+            catch (TwikeyClient.UserException ex)
+            {
+                if (ex.Message != "err_no_contract") throw;
+
+                Console.WriteLine("Mandate has no contract, but endpoint was reached");
+            }
         }
     }
 }
