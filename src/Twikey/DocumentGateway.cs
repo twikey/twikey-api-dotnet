@@ -168,7 +168,7 @@ namespace Twikey
         public async Task CancelMandateAsync(string mandateId, string reason, bool notify)
         {
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "notify=true" : string.Empty)}");
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "&notify=true" : string.Empty)}");
             request.Method = HttpMethod.Delete;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
