@@ -228,5 +228,37 @@ namespace Twikey
                 throw new TwikeyClient.UserException(apiError);
             }
         }
+
+        /// <inheritdoc cref="PdfAsync(string)"/>
+        public Stream Pdf(string mandateId)
+        {
+            return PdfAsync(mandateId).Result;
+        }
+
+        /// <summary>
+        /// Retrieve pdf of a mandate
+        /// </summary>
+        /// <param name="mandateId">Mandate Reference</param>
+        /// <returns>Stream of the pdf document</returns>
+        /// <exception cref="TwikeyClient.UserException"></exception>
+        public async Task<Stream> PdfAsync(string mandateId)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate/pdf?mndtId={mandateId}");
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return await response.Content.ReadAsStreamAsync();
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
     }
 }
