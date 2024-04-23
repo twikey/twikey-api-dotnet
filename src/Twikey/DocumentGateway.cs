@@ -14,18 +14,16 @@ namespace Twikey
     {
         protected internal DocumentGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
-        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
-        /// <param name="customer">Customer details</param>
-        /// <param cref="MandateRequest">MandateRequest containing details about the request</param>
-        /// <exception cref="IOException">When no connection could be made</exception>
-        /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        /// <returns>Url to redirect the customer to or to send in an email</returns>
+        /// <inheritdoc cref="CreateAsync(Customer,MandateRequest)"/>
         public SignableMandate Create(Customer customer, MandateRequest mandaterequest)
         {
             return CreateAsync(customer, mandaterequest).Result;
         }
 
-        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
+        /// <summary>Necessary to start with an eMandate or to create a contract. The end-result is a signed or 
+        /// protected shortlink that will allow the end-customer to sign a mandate or contract. The (short)link 
+        /// can be embedded in your website or in an email or in a paper letter. We advise to use the shortlink 
+        /// as the data is not exposed in the URL's.</summary>
         /// <param name="customer">Customer details</param>
         /// <param cref="MandateRequest">MandateRequest containing details about the request</param>
         /// <exception cref="IOException">When no connection could be made</exception>
@@ -89,10 +87,7 @@ namespace Twikey
 
         }
 
-        /// Get updates about all mandates (new/updated/cancelled)
-        /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
-        /// <exception cref="IOException">When a network issue happened</exception>
-        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        ///<inheritdoc cref="FeedAsync(string[])"/>
         public IEnumerable<MandateFeedMessage> Feed(params string[] xTypes)
         {
             bool isEmpty;
@@ -109,10 +104,15 @@ namespace Twikey
             } while (!isEmpty);
         }
 
-        /// Get updates about all mandates (new/updated/cancelled)
+        /// <summary>Returns a List of all updated mandates (new, changed or cancelled) since the last call. 
+        /// From the moment there are changes (eg. a new contract/mandate or an update of an existing contract) 
+        /// this call provides all related information to the creditor. The service is initiated by the creditor and 
+        /// provides all MRI information (and extra metadata) to the creditor. This call can either be triggered 
+        /// by a callback once a change was made or periodically when no callback can be made.</summary>
         /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        /// <returns>A list of all updated mandates since the last call</returns>
         public async Task<IEnumerable<MandateFeedMessage>> FeedAsync(params string[] xTypes)
         {
             Uri myUrl = _twikeyClient.GetUrl("/mandate");
@@ -139,12 +139,33 @@ namespace Twikey
             }
         }
 
-        public void CancelMandate(string mandateId, string reason, bool notify = false)
+        /// <inheritdoc cref="CancelMandateAsync(string,string)"/>
+        public void CancelMandate(string mandateId, string reason)
+        {
+            CancelMandate(mandateId, reason, false);
+        }
+
+        /// <inheritdoc cref="CancelMandateAsync(string,string,bool)"/>
+        public void CancelMandate(string mandateId, string reason, bool notify)
         {
             CancelMandateAsync(mandateId, reason, notify).RunSynchronously();
         }
 
-        public async Task CancelMandateAsync(string mandateId, string reason, bool notify = false)
+        /// <summary>
+        /// Cancel a mandate
+        /// </summary>
+        /// <param name="mandateId">Mandate reference</param>
+        /// <param name="reason">Reason of cancellation (Can be R-Message)</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while cancelling the mandate (eg. invalid apikey)</exception>
+        public async Task CancelMandateAsync(string mandateId, string reason)
+        {
+            await CancelMandateAsync(mandateId, reason, false);
+        }
+
+        /// <inheritdoc cref="CancelMandateAsync(string, string)"/>
+        /// <param name="notify">Notify the customer by email when true</param>
+        public async Task CancelMandateAsync(string mandateId, string reason, bool notify)
         {
             HttpRequestMessage request = new HttpRequestMessage();
             request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "notify=true" : string.Empty)}");
