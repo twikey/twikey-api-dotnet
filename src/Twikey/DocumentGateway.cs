@@ -147,7 +147,7 @@ namespace Twikey
         /// <inheritdoc cref="CancelMandateAsync(string,string,bool)"/>
         public void CancelMandate(string mandateId, string reason, bool notify)
         {
-            CancelMandateAsync(mandateId, reason, notify).RunSynchronously();
+            Task.Run(() => CancelMandateAsync(mandateId, reason, notify));
         }
 
         /// <summary>
