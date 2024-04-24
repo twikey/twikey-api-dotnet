@@ -116,7 +116,7 @@ namespace Twikey
 
         public void RemoveTransaction(string id = null, string reference = null)
         {
-            RemoveTransactionAsync(id, reference).RunSynchronously();
+            Task.Run(() => RemoveTransactionAsync(id, reference));
         }
 
         public async Task RemoveTransactionAsync(string id = null, string reference = null)

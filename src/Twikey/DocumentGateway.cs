@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 using System.IO;
 using Twikey.Model;
@@ -14,18 +13,16 @@ namespace Twikey
     {
         protected internal DocumentGateway(TwikeyClient twikeyClient): base(twikeyClient){}
 
-        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
-        /// <param name="customer">Customer details</param>
-        /// <param cref="MandateRequest">MandateRequest containing details about the request</param>
-        /// <exception cref="IOException">When no connection could be made</exception>
-        /// <exception cref="Twikey.TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
-        /// <returns>Url to redirect the customer to or to send in an email</returns>
+        /// <inheritdoc cref="CreateAsync(Customer,MandateRequest)"/>
         public SignableMandate Create(Customer customer, MandateRequest mandaterequest)
         {
             return CreateAsync(customer, mandaterequest).Result;
         }
 
-        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
+        /// <summary>Necessary to start with an eMandate or to create a contract. The end-result is a signed or 
+        /// protected shortlink that will allow the end-customer to sign a mandate or contract. The (short)link 
+        /// can be embedded in your website or in an email or in a paper letter. We advise to use the shortlink 
+        /// as the data is not exposed in the URL's.</summary>
         /// <param name="customer">Customer details</param>
         /// <param cref="MandateRequest">MandateRequest containing details about the request</param>
         /// <exception cref="IOException">When no connection could be made</exception>
@@ -89,10 +86,7 @@ namespace Twikey
 
         }
 
-        /// Get updates about all mandates (new/updated/cancelled)
-        /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
-        /// <exception cref="IOException">When a network issue happened</exception>
-        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        ///<inheritdoc cref="FeedAsync(string[])"/>
         public IEnumerable<MandateFeedMessage> Feed(params string[] xTypes)
         {
             bool isEmpty;
@@ -109,10 +103,15 @@ namespace Twikey
             } while (!isEmpty);
         }
 
-        /// Get updates about all mandates (new/updated/cancelled)
+        /// <summary>Returns a List of all updated mandates (new, changed or cancelled) since the last call. 
+        /// From the moment there are changes (eg. a new contract/mandate or an update of an existing contract) 
+        /// this call provides all related information to the creditor. The service is initiated by the creditor and 
+        /// provides all MRI information (and extra metadata) to the creditor. This call can either be triggered 
+        /// by a callback once a change was made or periodically when no callback can be made.</summary>
         /// <param name="xTypes">Array of x-types. For example CORE,CREDITCARD</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        /// <returns>A list of all updated mandates since the last call</returns>
         public async Task<IEnumerable<MandateFeedMessage>> FeedAsync(params string[] xTypes)
         {
             Uri myUrl = _twikeyClient.GetUrl("/mandate");
@@ -139,15 +138,36 @@ namespace Twikey
             }
         }
 
-        public void CancelMandate(string mandateId, string reason, bool notify = false)
+        /// <inheritdoc cref="CancelMandateAsync(string,string)"/>
+        public void CancelMandate(string mandateId, string reason)
         {
-            CancelMandateAsync(mandateId, reason, notify).RunSynchronously();
+            CancelMandate(mandateId, reason, false);
         }
 
-        public async Task CancelMandateAsync(string mandateId, string reason, bool notify = false)
+        /// <inheritdoc cref="CancelMandateAsync(string,string,bool)"/>
+        public void CancelMandate(string mandateId, string reason, bool notify)
+        {
+            Task.Run(() => CancelMandateAsync(mandateId, reason, notify));
+        }
+
+        /// <summary>
+        /// Cancel a mandate
+        /// </summary>
+        /// <param name="mandateId">Mandate reference</param>
+        /// <param name="reason">Reason of cancellation (Can be R-Message)</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while cancelling the mandate (eg. invalid apikey)</exception>
+        public async Task CancelMandateAsync(string mandateId, string reason)
+        {
+            await CancelMandateAsync(mandateId, reason, false);
+        }
+
+        /// <inheritdoc cref="CancelMandateAsync(string, string)"/>
+        /// <param name="notify">Notify the customer by email when true</param>
+        public async Task CancelMandateAsync(string mandateId, string reason, bool notify)
         {
             HttpRequestMessage request = new HttpRequestMessage();
-            request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "notify=true" : string.Empty)}");
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate?mndtId={mandateId}&rsn={reason}{(notify ? "&notify=true" : string.Empty)}");
             request.Method = HttpMethod.Delete;
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
@@ -156,6 +176,83 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 return;
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
+
+        /// <inheritdoc cref="DetailsAsync(string,bool)"/>
+        public MandateDetails Details(string mandateId, bool force)
+        {
+            return DetailsAsync(mandateId, force).Result;
+        }
+
+        /// <summary>
+        /// Retrieve details of a specific mandate. Since the structure of the mandate is the same as in the update feed but doesn't include details about state, 2 extra headers are added.
+        /// Note: Rate limits apply, though this is perfect for one-offs, for updates we recommend using the feed(see above).
+        /// </summary>
+        /// <param name="mandateId">Mandate Reference</param>
+        /// <param name="force">Also include non-signed states</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while cancelling the mandate (eg. invalid apikey)</exception>
+        /// <returns>The details of the mandate</returns>
+        public async Task<MandateDetails> DetailsAsync(string mandateId, bool force)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate/detail?mndtId={mandateId}{(force ? "&force=true" : "")}");
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var mandate = JsonConvert.DeserializeObject<MandateDetailResponse>(responseString);
+                var state = response.Headers.GetValues("X-STATE").FirstOrDefault();
+                var collectable = response.Headers.GetValues("X-COLLECTABLE").FirstOrDefault();
+
+                return new MandateDetails
+                {
+                    State = state,
+                    Collectable = collectable,
+                    Mandate = mandate.Mndt
+                };
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
+
+        /// <inheritdoc cref="PdfAsync(string)"/>
+        public Stream Pdf(string mandateId)
+        {
+            return PdfAsync(mandateId).Result;
+        }
+
+        /// <summary>
+        /// Retrieve pdf of a mandate
+        /// </summary>
+        /// <param name="mandateId">Mandate Reference</param>
+        /// <returns>Stream of the pdf document</returns>
+        /// <exception cref="TwikeyClient.UserException"></exception>
+        public async Task<Stream> PdfAsync(string mandateId)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/mandate/pdf?mndtId={mandateId}");
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return await response.Content.ReadAsStreamAsync();
             }
             else
             {

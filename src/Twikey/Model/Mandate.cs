@@ -21,11 +21,19 @@ namespace Twikey.Model
 
     public class MandateRequest
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MandateRequest"/> class.
+        /// </summary>
+        /// <param name="ct">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         public MandateRequest(long ct)
         {
             this.Ct = ct;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MandateRequest"/> class.
+        /// </summary>
+        /// <param name="tc">Template to use can be found @ https://www.twikey.com/r/admin#/c/template</param>
         public MandateRequest(string tc)
         {
             this.Tc = tc;
