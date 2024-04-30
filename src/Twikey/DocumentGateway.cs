@@ -112,9 +112,16 @@ namespace Twikey
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
         /// <returns>A list of all updated mandates since the last call</returns>
-        public async Task<IEnumerable<MandateFeedMessage>> FeedAsync(params string[] xTypes)
+        public async Task<IEnumerable<MandateFeedMessage>> FeedAsync(params string[] xTypes) =>
+            await FeedAsync(Array.Empty<MandateFeedIncludes>(), xTypes);
+
+        /// <inheritdoc cref="FeedAsync(string[], string[])"/>
+        /// <param name="resumeAfterEventId">Retrieve messages starting at this EventId, including messages that have already been seen</param>
+        public async Task<IEnumerable<MandateFeedMessage>> FeedAsync(IEnumerable<MandateFeedIncludes> includes, params string[] xTypes)
         {
-            Uri myUrl = _twikeyClient.GetUrl("/mandate");
+            var queryParams = includes.Any() ? "?" + string.Join("&", includes.Select(i => "include=" + i.ToString())) : string.Empty;
+            Uri myUrl = _twikeyClient.GetUrl($"/mandate{queryParams}");
+
             HttpRequestMessage request = new HttpRequestMessage();
             request.RequestUri = myUrl;
             request.Method = HttpMethod.Get;
