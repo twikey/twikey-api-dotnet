@@ -58,4 +58,16 @@ namespace Twikey.Model
         [JsonProperty("Rsn")]
         public string Reason { get; set; }
     }
+
+    // be careful when adding values, these get serialized verbatim to the query string
+    public enum MandateFeedIncludes
+    {
+        mandate,
+        person,
+        signature,
+        plan,
+        tracker,
+        seq,
+        cancelled_mandate
+    }
 }
