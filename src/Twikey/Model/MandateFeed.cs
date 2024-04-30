@@ -27,6 +27,8 @@ namespace Twikey.Model
         public string CreditorSchemeId { get; set; }
         [JsonProperty("EvtTime")]
         public DateTime? EventTime { get; set; }
+        [JsonProperty("EvtId")]
+        public long? EventId { get; set; }
 
         public bool IsNew()
         {
