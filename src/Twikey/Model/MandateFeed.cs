@@ -27,6 +27,8 @@ namespace Twikey.Model
         public string CreditorSchemeId { get; set; }
         [JsonProperty("EvtTime")]
         public DateTime? EventTime { get; set; }
+        [JsonProperty("EvtId")]
+        public long? EventId { get; set; }
 
         public bool IsNew()
         {
@@ -55,5 +57,17 @@ namespace Twikey.Model
         public object Originator { get; set; }
         [JsonProperty("Rsn")]
         public string Reason { get; set; }
+    }
+
+    // be careful when adding values, these get serialized verbatim to the query string
+    public enum MandateFeedIncludes
+    {
+        mandate,
+        person,
+        signature,
+        plan,
+        tracker,
+        seq,
+        cancelled_mandate
     }
 }
