@@ -147,6 +147,7 @@ namespace Twikey.Model
     public class Ctctdtls
     {
         public string EmailAdr { get; set; }
+        public string Othr { get; set; }
     }
 
     public class Dbtr
