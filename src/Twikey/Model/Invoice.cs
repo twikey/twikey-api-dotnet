@@ -61,7 +61,7 @@ namespace Twikey.Model
 
         [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
         [JsonIgnore]
-        public List<Meta> Meta { get; set; }
+        public Meta Meta { get; set; }
 
         [JsonProperty("lastpayment", NullValueHandling = NullValueHandling.Ignore)]
         [JsonIgnore]
