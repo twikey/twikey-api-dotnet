@@ -31,6 +31,9 @@ namespace Twikey.Model
         [JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
         public string Url { get; set; }
 
+        [JsonProperty("ct", NullValueHandling = NullValueHandling.Ignore)]
+        public string ContractTemplate { get; set; }
+
         public bool IsPaid()
         {
             return State == "paid";
