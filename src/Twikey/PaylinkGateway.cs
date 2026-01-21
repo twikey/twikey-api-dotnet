@@ -38,7 +38,7 @@ namespace Twikey
             AddIfExists(parameters, "amount", linkrequest.Amount);
             AddIfExists(parameters, "redirectUrl", linkrequest.RedirectUrl);
             AddIfExists(parameters, "place", linkrequest.Place);
-            AddIfExists(parameters, "expiry", linkrequest.Expiry);
+            AddIfExists(parameters, "expiry", linkrequest.Expiry?.ToString("yyyy-MM-dd"));
             AddIfExists(parameters, "sendInvite", linkrequest.SendInvite);
             AddIfExists(parameters, "method", linkrequest.Method);
             AddIfExists(parameters, "invoice", linkrequest.Invoice);

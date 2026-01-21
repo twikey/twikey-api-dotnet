@@ -98,25 +98,71 @@ namespace Twikey
 
             Uri myUrl = _twikeyClient.GetUrl(url);
             
-                HttpRequestMessage request = new HttpRequestMessage();
-                request.RequestUri = myUrl;
-                request.Method = HttpMethod.Get;
-                request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
-                request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = myUrl;
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
 
-                HttpResponseMessage response = await _twikeyClient.SendAsync(request);
-                if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var feed = JsonConvert.DeserializeObject<InvoiceUpdates>(responseString);
+                return feed.Invoices;
+            }
+            else
+            {
+                string apiError = response.Headers.GetValues("ApiError").First();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
+
+        // Get updates about all invoices (new/updated/cancelled)
+        /// <param name="invoiceCallback">Callback for every change</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public IEnumerable<Event> Payment()
+        {
+            bool isEmpty;
+            do
+            {
+                var payments = PaymentAsync().Result;
+                foreach (var payment in payments)
                 {
-                    var responseString = await response.Content.ReadAsStringAsync();
-                    var feed = JsonConvert.DeserializeObject<InvoiceUpdates>(responseString);
-                    return feed.Invoices;
+                    yield return payment;
                 }
-                else
-                {
-                    string apiError = response.Headers.GetValues("ApiError").First();
-                    throw new TwikeyClient.UserException(apiError);
-                }
-            
+                isEmpty = !payments.Any();
+            } while (!isEmpty);
+        }
+
+        // Get updates about all invoices (new/updated/cancelled)
+        /// <param name="invoiceCallback">Callback for every change</param>
+        /// <exception cref="IOException">When a network issue happened</exception>
+        /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
+        public async Task<IEnumerable<Event>> PaymentAsync()
+        {
+            string url = "/invoice/payment/feed";
+            Uri myUrl = _twikeyClient.GetUrl(url);
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = myUrl;
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                var feed = JsonConvert.DeserializeObject<PaymentUpdates>(responseString);
+                return feed.Payments;
+            }
+            else
+            {
+                string apiError = response.Headers.GetValues("ApiError").First();
+                throw new TwikeyClient.UserException(apiError);
+            }
         }
     }
 }

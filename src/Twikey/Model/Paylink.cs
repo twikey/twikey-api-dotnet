@@ -66,32 +66,32 @@ namespace Twikey.Model
         /// <summary>
         /// Optional redirect after pay url (must use http(s)://)
         /// </summary>
-        public string RedirectUrl { get; set; }
+        public string? RedirectUrl { get; set; }
 
         /// <summary>
         /// Optional place of purchase
         /// </summary>
-        public string Place { get; set; }
+        public string? Place { get; set; }
 
         /// <summary>
         /// Optional expiration date
         /// </summary>
-        public DateTime Expiry { get; set; }
+        public DateTime? Expiry { get; set; }
 
         /// <summary>
         /// Send out invite email or sms directly (email, sms)
         /// </summary>
-        public string SendInvite { get; set; }
+        public string? SendInvite { get; set; }
 
         /// <summary>
         /// Circumvents the payment selection with PSP (bancontact/ideal/maestro/mastercard/visa/inghomepay/kbc/belfius)
         /// </summary>
-        public string Method { get; set; }
+        public string? Method { get; set; }
 
         /// <summary>
         /// create payment link for specific invoice number
         /// </summary>
-        public string Invoice { get; set; }
+        public string? Invoice { get; set; }
 
         /// <summary>
         /// Template to use can be found @ https://www.twikey.com/r/admin#/c/template
@@ -101,8 +101,8 @@ namespace Twikey.Model
         /// <summary>
         /// Template to use can be found @ https://www.twikey.com/r/admin#/c/template
         /// </summary>
-        public string Tc { get; set; }
+        public string? Tc { get; set; }
 
-        public string IdempotencyKey { get; set; }
+        public string? IdempotencyKey { get; set; }
     }
 }

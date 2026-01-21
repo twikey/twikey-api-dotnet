@@ -10,6 +10,59 @@ namespace Twikey.Model
         public IEnumerable<Invoice> Invoices { get; set;}
     }
 
+    public class PaymentUpdates
+    {
+        public IEnumerable<Event> Payments { get; set;}
+    }
+
+    public record Event(
+        string EventId,
+        EventType EventType,
+        DateTimeOffset OccurredAt,
+        int Amount,
+        string Currency,
+        Origin Origin,
+        Gateway Gateway,
+        Dictionary<string, object?> Details,
+        EventError? Error
+    );
+
+    public enum EventType
+    {
+        Payment,
+        PaymentFailure,
+        Refund
+    }
+
+    public enum GatewayType
+    {
+        Bank,
+        Psp
+    }
+
+    public record Origin(
+        string Object,
+        string Id,
+        string Number,
+        string Ref
+    );
+
+    public record Gateway(
+        int Id,
+        string Name,
+        GatewayType Type,
+        string? Iban
+    );
+
+    public record EventError(
+        string Code,
+        string Description,
+        string Category,
+        string ExternalCode,
+        string Action,
+        int ActionStep
+    );
+
     public class Invoice
     {
         [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]

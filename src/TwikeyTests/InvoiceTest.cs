@@ -173,6 +173,10 @@ namespace TwikeyAPITests
             {
                 Console.WriteLine("Updated invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
             }
+            foreach (var payment in await _api.Invoice.PaymentAsync())
+            {
+                Console.WriteLine("Updated payment: " + JsonConvert.SerializeObject(payment, Formatting.Indented));
+            }
         }
     }
 }
