@@ -1,9 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 
 namespace TwikeyAPITests
@@ -52,7 +50,10 @@ namespace TwikeyAPITests
                 Ct = _ct,
             };
             var link = _api.Paylink.Create(_customer, request);
-            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            // Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            Assert.IsNotNull(link);
+            Assert.IsTrue(link.Amount > 0);
+            Assert.IsTrue(link.Id > 0);
         }
 
         // Needs integration in Twikey for example iDeal
@@ -70,7 +71,10 @@ namespace TwikeyAPITests
                 Ct = _ct,
             };
             var link = await _api.Paylink.CreateAsync(_customer, request);
-            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            // Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            Assert.IsNotNull(link);
+            Assert.IsTrue(link.Amount > 0);
+            Assert.IsTrue(link.Id > 0);
         }
 
         [TestMethod]
@@ -96,7 +100,10 @@ namespace TwikeyAPITests
             request.Remittance = s_testVersion;
 
             var link = _api.Paylink.Create(customer, request);
-            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            // Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            Assert.IsNotNull(link);
+            Assert.IsTrue(link.Amount > 0);
+            Assert.IsTrue(link.Id > 0);
         }
 
         [TestMethod]
@@ -122,7 +129,10 @@ namespace TwikeyAPITests
             request.Remittance = s_testVersion;
 
             var link = await _api.Paylink.CreateAsync(customer, request);
-            Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            // Console.WriteLine(JsonConvert.SerializeObject(link, Formatting.Indented));
+            Assert.IsNotNull(link);
+            Assert.IsTrue(link.Amount > 0);
+            Assert.IsTrue(link.Id > 0);
         }
 
         [TestMethod]
@@ -132,16 +142,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var link in _api.Paylink.Feed())
+            var links = _api.Paylink.Feed();
+            Assert.IsNotNull(links);
+            foreach(var link in links)
             {
-                if(link.IsPaid())
-                {
-                    Console.WriteLine("Paid paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
-                }
-                else
-                {
-                    Console.WriteLine("Paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
-                }
+                Assert.IsNotNull(link);
+                Assert.IsTrue(link.Amount >= 0);
             }
         }
 
@@ -153,16 +159,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var link in await _api.Paylink.FeedAsync())
+            var links = await _api.Paylink.FeedAsync();
+            Assert.IsNotNull(links);
+            foreach (var link in links)
             {
-                if (link.IsPaid())
-                {
-                    Console.WriteLine("Paid paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
-                }
-                else
-                {
-                    Console.WriteLine("Paylink: " + JsonConvert.SerializeObject(link, Formatting.Indented));
-                }
+                Assert.IsNotNull(link);
+                Assert.IsTrue(link.Amount >= 0);
             }
         }
     }

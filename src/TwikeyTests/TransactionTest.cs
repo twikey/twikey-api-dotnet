@@ -1,9 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace TwikeyAPITests
@@ -12,7 +10,6 @@ namespace TwikeyAPITests
     public class TransactionTest
     {
         private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
-        private static readonly JsonSerializerOptions s_indentOptions = new() { WriteIndented = true };
         private static readonly string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
         private static readonly long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
         private static readonly string _mandateNumber = Environment.GetEnvironmentVariable("MNDTNUMBER");
@@ -62,7 +59,10 @@ namespace TwikeyAPITests
             request.Refase2e = true;
 
             var transaction = _api.Transaction.Create(_mandateNumber, request);
-            Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(transaction);
+            Assert.IsTrue(transaction.Amount > 0);
+            Assert.IsTrue(transaction.Id > 0);
         }
 
         [TestMethod]
@@ -88,7 +88,10 @@ namespace TwikeyAPITests
             request.Refase2e = true;
 
             var transaction = await _api.Transaction.CreateAsync(_mandateNumber, request);
-            Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(transaction);
+            Assert.IsTrue(transaction.Amount > 0);
+            Assert.IsTrue(transaction.Id > 0);
         }
 
         [TestMethod]
@@ -98,9 +101,13 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var transaction in _api.Transaction.Feed())
+            var feed = _api.Transaction.Feed();
+            Assert.IsNotNull(feed);
+            foreach(var entry in feed)
             {
-                Console.WriteLine("Transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+                Assert.IsNotNull(entry);
+                Assert.IsTrue(entry.Amount >= 0);
+                Assert.IsTrue(entry.Id > 0);
             }
         }
 
@@ -112,9 +119,13 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var transaction in await _api.Transaction.FeedAsync())
+            var feed = await _api.Transaction.FeedAsync();
+            Assert.IsNotNull(feed);
+            foreach (var entry in feed)
             {
-                Console.WriteLine("Transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
+                Assert.IsNotNull(entry);
+                Assert.IsTrue(entry.Amount >= 0);
+                Assert.IsTrue(entry.Id > 0);
             }
         }
     }

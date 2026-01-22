@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.Serialization;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Twikey.Model.Parameters;
-using System.Runtime.Serialization;
-using System.Text.Json.Serialization;
 
 #nullable enable
 

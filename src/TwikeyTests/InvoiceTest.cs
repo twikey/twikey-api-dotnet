@@ -1,9 +1,7 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
-using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace TwikeyAPITests
@@ -57,7 +55,10 @@ namespace TwikeyAPITests
             };
 
             invoice = _api.Invoice.Create(_ct, _customer, invoice);
-            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(invoice);
+            Assert.IsTrue(invoice.Amount > 0);
+            Assert.IsFalse(string.IsNullOrEmpty(invoice.Number));
         }
 
         [TestMethod]
@@ -79,7 +80,10 @@ namespace TwikeyAPITests
             };
 
             invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
-            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(invoice);
+            Assert.IsTrue(invoice.Amount > 0);
+            Assert.IsFalse(string.IsNullOrEmpty(invoice.Title));
         }
 
         [TestMethod]
@@ -112,7 +116,8 @@ namespace TwikeyAPITests
             };
 
             invoice = _api.Invoice.Create(_ct, customer, invoice);
-            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(invoice);
         }
 
         [TestMethod]
@@ -145,7 +150,8 @@ namespace TwikeyAPITests
             };
 
             invoice = await _api.Invoice.CreateAsync(_ct, customer, invoice);
-            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+            Assert.IsNotNull(invoice);
         }
 
         [TestMethod]
@@ -155,9 +161,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var invoice in _api.Invoice.Feed())
+            var feed = _api.Invoice.Feed();
+            Assert.IsNotNull(feed);
+            foreach(var invoice in feed)
             {
-                Console.WriteLine("Updated invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+                Assert.IsNotNull(invoice);
+                Assert.IsFalse(string.IsNullOrEmpty(invoice.Number));
             }
         }
 
@@ -169,13 +178,19 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var invoice in await _api.Invoice.FeedAsync())
+            var invoiceFeed = await _api.Invoice.FeedAsync();
+            Assert.IsNotNull(invoiceFeed);
+            foreach (var invoice in invoiceFeed)
             {
-                Console.WriteLine("Updated invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
+                Assert.IsNotNull(invoice);
+                Assert.IsFalse(string.IsNullOrEmpty(invoice.Number));
             }
-            foreach (var payment in await _api.Invoice.PaymentAsync())
+            var payments = await _api.Invoice.PaymentAsync();
+            Assert.IsNotNull(payments);
+            foreach (var payment in payments)
             {
-                Console.WriteLine("Updated payment: " + JsonSerializer.Serialize(payment, new JsonSerializerOptions{WriteIndented = true}));
+                Assert.IsNotNull(payment);
+                Assert.IsFalse(string.IsNullOrEmpty(payment.EventId));
             }
         }
     }

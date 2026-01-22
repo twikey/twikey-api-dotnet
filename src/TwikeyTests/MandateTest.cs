@@ -2,7 +2,6 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using Twikey;
 using Twikey.Model;
-using Newtonsoft.Json;
 using System.Threading.Tasks;
 using System.Linq;
 
@@ -47,7 +46,9 @@ namespace TwikeyAPITests
                 return;
             }
             var signableMandate = _api.Document.Create(_customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.Url));
         }
 
         [TestMethod]
@@ -59,7 +60,9 @@ namespace TwikeyAPITests
                 return;
             }
             var signableMandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.MandateNumber));
         }
 
         [TestMethod]
@@ -81,7 +84,9 @@ namespace TwikeyAPITests
                 Zip = "9000"
             };
             var signableMandate = _api.Document.Create(customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.Url));
         }
 
         [TestMethod]
@@ -103,7 +108,9 @@ namespace TwikeyAPITests
                 Zip = "9000"
             };
             var signableMandate = await _api.Document.CreateAsync(customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.MandateNumber));
         }
 
         [TestMethod]
@@ -115,7 +122,9 @@ namespace TwikeyAPITests
                 return;
             }
             var signableMandate = _api.Document.Create(_customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.Url));
         }
 
         [TestMethod]
@@ -127,7 +136,9 @@ namespace TwikeyAPITests
                 return;
             }
             var signableMandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
-            Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            // Console.WriteLine("SignableMandate: " + JsonConvert.SerializeObject(signableMandate));
+            Assert.IsNotNull(signableMandate);
+            Assert.IsFalse(string.IsNullOrEmpty(signableMandate.MandateNumber));
         }
 
         [TestMethod]
@@ -137,20 +148,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var mandateUpdate in _api.Document.Feed())
+            var feed = _api.Document.Feed();
+            Assert.IsNotNull(feed);
+            foreach(var mandateUpdate in feed)
             {
-                if(mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -162,20 +165,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var mandateUpdate in await _api.Document.FeedAsync())
+            var feed = await _api.Document.FeedAsync();
+            Assert.IsNotNull(feed);
+            foreach (var mandateUpdate in feed)
             {
-                if (mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -186,20 +181,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var mandateUpdate in _api.Document.Feed("CREDITCARD"))
+            var feed = _api.Document.Feed("CREDITCARD");
+            Assert.IsNotNull(feed);
+            foreach(var mandateUpdate in feed)
             {
-                if(mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -211,20 +198,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var mandateUpdate in await _api.Document.FeedAsync("CREDITCARD"))
+            var feed = await _api.Document.FeedAsync("CREDITCARD");
+            Assert.IsNotNull(feed);
+            foreach (var mandateUpdate in feed)
             {
-                if (mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -235,20 +214,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach(var mandateUpdate in _api.Document.Feed("CREDITCARD", "WIK"))
+            var feed = _api.Document.Feed("CREDITCARD", "WIK");
+            Assert.IsNotNull(feed);
+            foreach(var mandateUpdate in feed)
             {
-                if(mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if(mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -260,20 +231,12 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            foreach (var mandateUpdate in await _api.Document.FeedAsync("CREDITCARD", "WIK"))
+            var feed = await _api.Document.FeedAsync("CREDITCARD", "WIK");
+            Assert.IsNotNull(feed);
+            foreach (var mandateUpdate in feed)
             {
-                if (mandateUpdate.IsNew())
-                {
-                    Console.WriteLine("New mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsUpdated())
-                {
-                    Console.WriteLine("Updated mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
-                else if (mandateUpdate.IsCancelled())
-                {
-                    Console.WriteLine("Cancelled mandate: " + JsonConvert.SerializeObject(mandateUpdate, Formatting.Indented));
-                }
+                Assert.IsNotNull(mandateUpdate);
+                Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -345,8 +308,10 @@ namespace TwikeyAPITests
             var mandate = _api.Document.Create(_customer, new MandateRequest(_ct));
 
             var details = _api.Document.Details(mandate.MandateNumber, true);
-
-            Console.WriteLine("Mandate details:" + details);
+            // Console.WriteLine("Mandate details:" + details);
+            Assert.IsNotNull(details);
+            Assert.IsNotNull(details.Mandate);
+            Assert.IsFalse(string.IsNullOrEmpty(details.Mandate.MndtId));
         }
 
         [TestMethod]
@@ -361,8 +326,10 @@ namespace TwikeyAPITests
             var mandate = await _api.Document.CreateAsync(_customer, new MandateRequest(_ct));
 
             var details = await _api.Document.DetailsAsync(mandate.MandateNumber, true);
-
-            Console.WriteLine("Mandate details:" + details);
+            // Console.WriteLine("Mandate details:" + details);
+            Assert.IsNotNull(details);
+            Assert.IsNotNull(details.Mandate);
+            Assert.IsFalse(string.IsNullOrEmpty(details.Mandate.MndtId));
         }
 
         [TestMethod]
@@ -379,12 +346,14 @@ namespace TwikeyAPITests
             try
             {
                 var pdfError = _api.Document.Pdf(mandate.MandateNumber);
+                Assert.IsNotNull(pdfError);
             }
             catch (AggregateException ex)
             {
                 if (ex.InnerExceptions.Single().Message != "err_no_contract") throw;
 
-                Console.WriteLine("Mandate has no contract, but endpoint was reached");
+                // Console.WriteLine("Mandate has no contract, but endpoint was reached");
+                Assert.AreEqual("err_no_contract", ex.InnerExceptions.Single().Message);
             }
         }
 
@@ -402,12 +371,14 @@ namespace TwikeyAPITests
             try
             {
                 var pdfError = await _api.Document.PdfAsync(mandate.MandateNumber);
+                Assert.IsNotNull(pdfError);
             }
             catch (TwikeyClient.UserException ex)
             {
                 if (ex.Message != "err_no_contract") throw;
 
-                Console.WriteLine("Mandate has no contract, but endpoint was reached");
+                // Console.WriteLine("Mandate has no contract, but endpoint was reached");
+                Assert.AreEqual("err_no_contract", ex.Message);
             }
         }
     }
