@@ -1,33 +1,33 @@
-﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json.Serialization;
 
 namespace Twikey.Model
 {
     internal class MandateFeed
     {
-        [JsonProperty("GrpHdr")]
+        [JsonPropertyName("GrpHdr")]
         public Groupheader GroupHeader { get; set; }
         public IEnumerable<MandateFeedMessage> Messages { get; set; }
     }
 
     public class MandateFeedMessage
     {
-        [JsonProperty("Mndt")]
+        [JsonPropertyName("Mndt")]
         public Mandate Mandate { get; set; }
-        [JsonProperty("AmdmntRsn")]
+        [JsonPropertyName("AmdmntRsn")]
         public MandateFeedReason AmendmentReason { get; set; }
-        [JsonProperty("CxlRsn")]
+        [JsonPropertyName("CxlRsn")]
         public MandateFeedReason CancellationReason { get; set; }
-        [JsonProperty("OrgnlMndtId")]
+        [JsonPropertyName("OrgnlMndtId")]
         public string OriginalMandateId { get; set; }
-        [JsonProperty("CdtrSchmeId")]
+        [JsonPropertyName("CdtrSchmeId")]
         public string CreditorSchemeId { get; set; }
-        [JsonProperty("EvtTime")]
+        [JsonPropertyName("EvtTime")]
         public DateTime? EventTime { get; set; }
-        [JsonProperty("EvtId")]
+        [JsonPropertyName("EvtId")]
         public long? EventId { get; set; }
 
         public bool IsNew()
@@ -53,9 +53,9 @@ namespace Twikey.Model
 
     public class MandateFeedReason
     {
-        [JsonProperty("Orgtr")]
+        [JsonPropertyName("Orgtr")]
         public object Originator { get; set; }
-        [JsonProperty("Rsn")]
+        [JsonPropertyName("Rsn")]
         public string Reason { get; set; }
     }
 

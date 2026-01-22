@@ -1,21 +1,25 @@
-﻿using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Twikey.Model.Parameters;
 
 public class Meta
 {
-    [JsonProperty("reminderLevel", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("reminderLevel")]
     public int ReminderLevel { get; set; }
     
-    [JsonProperty("partial", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("partial")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Partial { get; set; }
     
-    [JsonProperty("lastError", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("lastError")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string LastError { get; set; }
     
-    [JsonProperty("name", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("name")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Name { get; set; }
     
-    [JsonProperty("paymentMethod", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("paymentMethod")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PaymentMethod { get; set; }
 }

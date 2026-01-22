@@ -1,61 +1,67 @@
-﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml.Schema;
+using System.Text.Json.Serialization;
 
 namespace Twikey.Model
 {
     public class Transaction
     {
+        [JsonPropertyName("entries")]
         public IEnumerable<TransactionEntry> Entries { get; set;}
     }
 
     public class TransactionEntry
     {
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonProperty("contractId", NullValueHandling = NullValueHandling.Ignore)]
-        public string ContractId { get; set; }
+        [JsonPropertyName("contractId")]
+        public int ContractId { get; set; }
 
-        [JsonProperty("mndtId", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("mndtId")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string MandateId { get; set; }
 
-        [JsonProperty("contract", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("contract")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Contract { get; set; }
 
-        [JsonProperty("amount", NullValueHandling = NullValueHandling.Ignore)]
         public decimal Amount { get; set; }
 
-        [JsonProperty("message", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("message")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Message { get; set; }
 
-        [JsonProperty("msg", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("msg")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         private string MessageResponse { set { Message = value; } }
 
-        [JsonProperty("place", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("place")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Place { get; set; }
 
-        [JsonProperty("ref", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("ref")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Reference { get; set; }
 
-        [JsonProperty("date", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("date")]
         public DateTime? Date { get; set; }
 
-        [JsonProperty("final", NullValueHandling = NullValueHandling.Ignore)]
         public bool IsFinal { get; set; }
 
-        [JsonProperty("state", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("state")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string State { get; set; }
 
-        [JsonProperty("bkdate", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("bkdate")]
         public DateTime? BKDate { get; set; }
 
-        [JsonProperty("bkerror", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("bkerror")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string BKError { get; set; }
 
-        [JsonProperty("bkmsg", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("bkmsg")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string BKMessage { get; set; }
     }
 

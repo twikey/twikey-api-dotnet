@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
@@ -50,14 +49,14 @@ namespace Twikey
             request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
             request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
 
-            var invoice_string = JsonConvert.SerializeObject(invoice, Formatting.Indented);
+            var invoice_string = JsonSerializer.Serialize(invoice, JsonOptions);
             request.Content = new StringContent(invoice_string, Encoding.UTF8, TwikeyClient.JSON);
 
             HttpResponseMessage response = await _twikeyClient.SendAsync(request);
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<Invoice>(responseString);
+                return JsonSerializer.Deserialize<Invoice>(responseString, JsonOptions)!;
             }
 
             string apiError = response.Headers.GetValues("ApiError").First();
@@ -108,8 +107,8 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var feed = JsonConvert.DeserializeObject<InvoiceUpdates>(responseString);
-                return feed.Invoices;
+                var feed = JsonSerializer.Deserialize<InvoiceUpdates>(responseString, JsonOptions);
+                return feed?.Invoices ?? Array.Empty<Invoice>();
             }
             else
             {
@@ -155,8 +154,8 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var feed = JsonConvert.DeserializeObject<PaymentUpdates>(responseString);
-                return feed.Payments;
+                var feed = JsonSerializer.Deserialize<PaymentUpdates>(responseString, JsonOptions);
+                return feed?.Payments ?? Array.Empty<Event>();
             }
             else
             {

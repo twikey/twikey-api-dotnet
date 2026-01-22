@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace TwikeyAPITests
@@ -57,7 +57,7 @@ namespace TwikeyAPITests
             };
 
             invoice = _api.Invoice.Create(_ct, _customer, invoice);
-            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -79,7 +79,7 @@ namespace TwikeyAPITests
             };
 
             invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
-            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -112,7 +112,7 @@ namespace TwikeyAPITests
             };
 
             invoice = _api.Invoice.Create(_ct, customer, invoice);
-            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -145,7 +145,7 @@ namespace TwikeyAPITests
             };
 
             invoice = await _api.Invoice.CreateAsync(_ct, customer, invoice);
-            Console.WriteLine("New invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+            Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -157,7 +157,7 @@ namespace TwikeyAPITests
             }
             foreach(var invoice in _api.Invoice.Feed())
             {
-                Console.WriteLine("Updated invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+                Console.WriteLine("Updated invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
             }
         }
 
@@ -171,11 +171,11 @@ namespace TwikeyAPITests
             }
             foreach (var invoice in await _api.Invoice.FeedAsync())
             {
-                Console.WriteLine("Updated invoice: " + JsonConvert.SerializeObject(invoice, Formatting.Indented));
+                Console.WriteLine("Updated invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
             }
             foreach (var payment in await _api.Invoice.PaymentAsync())
             {
-                Console.WriteLine("Updated payment: " + JsonConvert.SerializeObject(payment, Formatting.Indented));
+                Console.WriteLine("Updated payment: " + JsonSerializer.Serialize(payment, new JsonSerializerOptions{WriteIndented = true}));
             }
         }
     }

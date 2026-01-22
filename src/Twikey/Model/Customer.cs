@@ -1,46 +1,57 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Twikey.Model
 {
     public class Customer
     {
-        [JsonProperty("lastName", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("lastName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Lastname { get; set; }
 
-        [JsonProperty("firstName", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("firstName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Firstname { get; set; }
 
-        [JsonProperty("email", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("email")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Email { get; set; }
 
-        [JsonProperty("l", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("l")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Lang { get; set; }
 
-        [JsonProperty("mobile", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("mobile")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Mobile { get; set; }
 
-        [JsonProperty("address", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("address")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Street { get; set; }
 
-        [JsonProperty("city", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("city")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string City { get; set; }
 
-        [JsonProperty("zip", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("zip")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Zip { get; set; }
 
-        [JsonProperty("country", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("country")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Country { get; set; }
 
-        [JsonProperty("customerNumber", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("customerNumber")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string CustomerNumber { get; set; }
 
-        [JsonProperty("companyName", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("companyName")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string CompanyName { get; set; }
 
-        [JsonProperty("coc", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("coc")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Coc { get; set; }
 
         public Customer() { }
     }
 }
-

@@ -1,12 +1,19 @@
 using System.Collections.Generic;
 using System;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace Twikey
 {
     public abstract class Gateway
     {
+        protected static readonly JsonSerializerOptions JsonOptions = new()
+        {
+            PropertyNameCaseInsensitive = true,
+            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) },
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+        };
+
         protected readonly TwikeyClient _twikeyClient;
         
         protected Gateway(TwikeyClient twikeyClient){
@@ -53,11 +60,5 @@ namespace Twikey
                parameters.Add(key, value.ToString());
         }
 
-        protected void AddIfExists(JObject parameters, string key, string value){
-            if(parameters == null || String.IsNullOrEmpty(key))
-                return;
-            if(!String.IsNullOrEmpty(value))
-                parameters.Add(key, value);
-        }
     }
 }

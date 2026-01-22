@@ -2,8 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.IO;
 using System.Text;
 using System.Net.Http.Headers;
@@ -59,8 +58,8 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var tx = JsonConvert.DeserializeObject<Transaction>(responseString);
-                return tx.Entries.ElementAtOrDefault(0);
+                var tx = JsonSerializer.Deserialize<Transaction>(responseString, JsonOptions);
+                return tx?.Entries.ElementAtOrDefault(0);
             }
 
             string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
@@ -104,8 +103,8 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseText = await response.Content.ReadAsStringAsync();
-                var feed = JsonConvert.DeserializeObject<Transaction>(responseText);
-                return feed.Entries;
+                var feed = JsonSerializer.Deserialize<Transaction>(responseText, JsonOptions);
+                return feed?.Entries ?? Array.Empty<TransactionEntry>();
             }
             else
             {

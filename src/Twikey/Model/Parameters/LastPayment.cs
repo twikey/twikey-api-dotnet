@@ -1,45 +1,54 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
-using Newtonsoft.Json;
 
 namespace Twikey.Model.Parameters;
 
 public class LastPayment
 {
-    [JsonProperty("method", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("method")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PaymentMethod { get; set; }
     
-    [JsonProperty("action", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("action")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Action { get; set; }
     
-    [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("id")]
     public int Id { get; set; }
     
-    [JsonProperty("e2e", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("e2e")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string EndToEndReference { get; set; }
     
-    [JsonProperty("pmtinf", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("pmtinf")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PaymentInformation { get; set; }
     
-    [JsonProperty("iban", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("iban")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Iban { get; set; }
     
-    [JsonProperty("bic", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("bic")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Bic { get; set; }
     
-    [JsonProperty("rc", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("rc")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string ReturnCode { get; set; }
     
-    [JsonProperty("link", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("link")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string PaymentLink { get; set; }
     
-    [JsonProperty("msg", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("msg")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string Message { get; set; }
     
-    [JsonProperty("mndtId", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("mndtId")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public string MandateId { get; set; }
     
-    [JsonProperty("date", NullValueHandling = NullValueHandling.Ignore)]
+    [JsonPropertyName("date")]
     public DateTime TransactionDate { get; set; }
     
 }

@@ -3,8 +3,7 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -78,7 +77,7 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<Paylink>(responseString);
+                return JsonSerializer.Deserialize<Paylink>(responseString, JsonOptions)!;
             }
 
             string apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
@@ -130,8 +129,8 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseText = await response.Content.ReadAsStringAsync();
-                var feed = JsonConvert.DeserializeObject<Paylinks>(responseText);
-                return feed.Links;
+                var feed = JsonSerializer.Deserialize<Paylinks>(responseText, JsonOptions);
+                return feed?.Links ?? Array.Empty<Paylink>();
             }
             else
             {

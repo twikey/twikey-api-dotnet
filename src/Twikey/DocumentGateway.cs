@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Net.Http;
 using System.Linq;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.IO;
 using Twikey.Model;
 using System.Threading.Tasks;
@@ -78,7 +78,7 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                return JsonConvert.DeserializeObject<SignableMandate>(responseString);
+                return JsonSerializer.Deserialize<SignableMandate>(responseString, JsonOptions)!;
             }
 
             string apiError = response.Headers.GetValues("ApiError").First();
@@ -136,9 +136,9 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var feed = JsonConvert.DeserializeObject<MandateFeed>(responseString);
+                var feed = JsonSerializer.Deserialize<MandateFeed>(responseString, JsonOptions);
                 
-                return feed.Messages;
+                return feed?.Messages ?? Array.Empty<MandateFeedMessage>();
             }
             else
             {
@@ -220,7 +220,7 @@ namespace Twikey
             if (response.StatusCode == System.Net.HttpStatusCode.OK)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
-                var mandate = JsonConvert.DeserializeObject<MandateDetailResponse>(responseString);
+                var mandate = JsonSerializer.Deserialize<MandateDetailResponse>(responseString, JsonOptions);
                 var state = response.Headers.GetValues("X-STATE").FirstOrDefault();
                 var collectable = response.Headers.GetValues("X-COLLECTABLE").FirstOrDefault();
 

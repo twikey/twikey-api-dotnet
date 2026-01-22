@@ -1,18 +1,24 @@
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Twikey.Model.Parameters;
+using System.Runtime.Serialization;
+using System.Text.Json.Serialization;
+
+#nullable enable
 
 namespace Twikey.Model
 {
     public class InvoiceUpdates
     {
-        public IEnumerable<Invoice> Invoices { get; set;}
+        public IEnumerable<Invoice> Invoices { get; set; } = Array.Empty<Invoice>();
     }
 
     public class PaymentUpdates
     {
-        public IEnumerable<Event> Payments { get; set;}
+        public IEnumerable<Event> Payments { get; set; } = Array.Empty<Event>();
     }
 
     public record Event(
@@ -27,10 +33,14 @@ namespace Twikey.Model
         EventError? Error
     );
 
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public enum EventType
     {
+        [EnumMember(Value = "payment")]
         Payment,
+        [EnumMember(Value = "payment_failure")]
         PaymentFailure,
+        [EnumMember(Value = "refund")]
         Refund
     }
 
@@ -65,68 +75,85 @@ namespace Twikey.Model
 
     public class Invoice
     {
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
-        public string Id { get; set; }
+        [JsonPropertyName("id")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string Id { get; set; } = null!;
 
-        [JsonProperty("number")]
-        public string Number { get; set; }
+        [JsonPropertyName("number")]
+        public string Number { get; set; } = null!;
 
-        [JsonProperty("title")]
-        public string Title { get; set; }
+        [JsonPropertyName("title")]
+        public string Title { get; set; } = null!;
 
-        [JsonProperty("remittance")]
-        public string Remittance { get; set; }
+        [JsonPropertyName("remittance")]
+        public string Remittance { get; set; } = null!;
 
-        [JsonProperty("ct")]
+        [JsonPropertyName("ct")]
         public long Ct { get; set; }
 
-        [JsonProperty("manual", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("manual")]
         public bool Manual { get; set; }
 
-        [JsonProperty("state", NullValueHandling = NullValueHandling.Ignore)]
-        public string State { get; set; }
+        [JsonPropertyName("state")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? State { get; set; }
 
-        [JsonProperty("amount")]
+        [JsonPropertyName("amount")]
         public double Amount { get; set; }
 
-        [JsonProperty("date")]
+        [JsonPropertyName("date")]
         [JsonConverter(typeof(CustomDateTimeConverter))]
         public DateTime Date { get; set; }
 
-        [JsonProperty("duedate", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("duedate")]
         [JsonConverter(typeof(CustomDateTimeConverter))]
         public DateTime Duedate { get; set; }
 
-        [JsonProperty("ref", NullValueHandling = NullValueHandling.Ignore)]
-        public string Ref { get; set; }
+        [JsonPropertyName("ref")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Ref { get; set; }
 
-        [JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
-        public string Url { get; set; }
+        [JsonPropertyName("url")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Url { get; set; }
 
-        [JsonProperty("customerByDocument", NullValueHandling = NullValueHandling.Ignore)]
-        public string CustomerByDocument { get; set; }
+        [JsonPropertyName("customerByDocument")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? CustomerByDocument { get; set; }
 
-        [JsonProperty("customer", NullValueHandling = NullValueHandling.Ignore)]
-        public Customer Customer { get; set; }
+        [JsonPropertyName("customer")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public Customer? Customer { get; set; }
 
-        [JsonProperty("pdf", NullValueHandling = NullValueHandling.Ignore)]
-        public Byte[] Pdf { get; set; }
+        [JsonPropertyName("pdf")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public byte[]? Pdf { get; set; }
 
-        [JsonProperty("meta", NullValueHandling = NullValueHandling.Ignore)]
         [JsonIgnore]
-        public Meta Meta { get; set; }
+        public Meta? Meta { get; set; }
 
-        [JsonProperty("lastpayment", NullValueHandling = NullValueHandling.Ignore)]
         [JsonIgnore]
-        public List<LastPayment> LastPayment { get; set; }
+        public List<LastPayment>? LastPayment { get; set; }
     }
 
-    public class CustomDateTimeConverter : Newtonsoft.Json.Converters.IsoDateTimeConverter
+    public class CustomDateTimeConverter : JsonConverter<DateTime>
     {
-        public CustomDateTimeConverter()
+        private const string Format = "yyyy-MM-dd";
+
+        public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         {
-            DateTimeFormat = "yyyy-MM-dd";
+            var value = reader.GetString();
+            if (string.IsNullOrEmpty(value))
+            {
+                throw new JsonException("Unable to parse empty date string.");
+            }
+
+            return DateTime.ParseExact(value, Format, System.Globalization.CultureInfo.InvariantCulture);
+        }
+
+        public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options)
+        {
+            writer.WriteStringValue(value.ToString(Format, System.Globalization.CultureInfo.InvariantCulture));
         }
     }
 }
-

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Twikey.Model
 {
@@ -105,13 +104,16 @@ namespace Twikey.Model
 
     public class SignableMandate
     {
-        [JsonProperty("mndtId", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("mndtId")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string MandateNumber { get; set; }
 
-        [JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("url")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Url { get; set; }
 
-        [JsonProperty("key", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("key")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string ShortKey { get; set; }
     }
 

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
-using Newtonsoft.Json;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace TwikeyAPITests
@@ -12,6 +12,7 @@ namespace TwikeyAPITests
     public class TransactionTest
     {
         private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
+        private static readonly JsonSerializerOptions s_indentOptions = new() { WriteIndented = true };
         private static readonly string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
         private static readonly long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
         private static readonly string _mandateNumber = Environment.GetEnvironmentVariable("MNDTNUMBER");
@@ -61,7 +62,7 @@ namespace TwikeyAPITests
             request.Refase2e = true;
 
             var transaction = _api.Transaction.Create(_mandateNumber, request);
-            Console.WriteLine("New transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+            Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -87,7 +88,7 @@ namespace TwikeyAPITests
             request.Refase2e = true;
 
             var transaction = await _api.Transaction.CreateAsync(_mandateNumber, request);
-            Console.WriteLine("New transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+            Console.WriteLine("New transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
         }
 
         [TestMethod]
@@ -99,7 +100,7 @@ namespace TwikeyAPITests
             }
             foreach(var transaction in _api.Transaction.Feed())
             {
-                Console.WriteLine("Transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+                Console.WriteLine("Transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
             }
         }
 
@@ -113,7 +114,7 @@ namespace TwikeyAPITests
             }
             foreach (var transaction in await _api.Transaction.FeedAsync())
             {
-                Console.WriteLine("Transaction: " + JsonConvert.SerializeObject(transaction, Formatting.Indented));
+                Console.WriteLine("Transaction: " + JsonSerializer.Serialize(transaction, new JsonSerializerOptions{WriteIndented = true}));
             }
         }
     }

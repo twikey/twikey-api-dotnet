@@ -1,38 +1,42 @@
-﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Xml.Schema;
+using System.Text.Json.Serialization;
+
+#nullable enable
 
 namespace Twikey.Model
 {
     public class Paylinks
     {
-        public IEnumerable<Paylink> Links { get; set;}
+        [JsonPropertyName("links")]
+        public IEnumerable<Paylink> Links { get; set; } = Array.Empty<Paylink>();
     }
 
     public class Paylink
     {
-        [JsonProperty("id", NullValueHandling = NullValueHandling.Ignore)]
+        [JsonPropertyName("id")]
         public int Id { get; set; }
 
-        [JsonProperty("state", NullValueHandling = NullValueHandling.Ignore)]
-        public string State { get; set; }
+        [JsonPropertyName("state")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? State { get; set; }
 
-        [JsonProperty("amount", NullValueHandling = NullValueHandling.Ignore)]
         public decimal Amount { get; set; }
 
-        [JsonProperty("msg", NullValueHandling = NullValueHandling.Ignore)]
-        private string Message { get; set; }
+        [JsonPropertyName("msg")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        private string? Message { get; set; }
 
-        [JsonProperty("ref", NullValueHandling = NullValueHandling.Ignore)]
-        public string Reference { get; set; }
+        [JsonPropertyName("ref")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Reference { get; set; }
 
-        [JsonProperty("url", NullValueHandling = NullValueHandling.Ignore)]
-        public string Url { get; set; }
+        [JsonPropertyName("url")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string? Url { get; set; }
 
-        [JsonProperty("ct", NullValueHandling = NullValueHandling.Ignore)]
-        public string ContractTemplate { get; set; }
+        [JsonPropertyName("ct")]
+        public string? ContractTemplate { get; set; }
 
         public bool IsPaid()
         {
@@ -51,12 +55,12 @@ namespace Twikey.Model
         /// <summary>
         /// Message to the debtor
         /// </summary>
-        public string Message { get; set; }
+        public string Message { get; set; } = null!;
 
         /// <summary>
         /// Payment message, if empty then title will be used
         /// </summary>
-        public string Remittance { get; set; }
+        public string? Remittance { get; set; }
 
         /// <summary>
         /// Amount to be billed	Yes	string
