@@ -18,7 +18,7 @@ payment options of your favorite PSP to allow other customers to pay as well.
 To use the Twikey API client, the following things are required:
 
 + Get yourself a [Twikey account](https://www.twikey.com).
-+ .NET core >= 6.0
++ .NET core >= 10.0
 + Up-to-date OpenSSL (or other SSL/TLS toolkit)
 
 ## Installation 
