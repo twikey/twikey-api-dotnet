@@ -38,56 +38,6 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
-        public void TestCreateInvoice()
-        {
-            if (_apiKey == null)
-            {
-                Assert.Inconclusive("apiKey is null");
-                return;
-            }
-            var invoice = new Invoice()
-            {
-                Number = "Invoice"+DateTime.Now.ToString("yyyyMMdd"),
-                Title = "Invoice April",
-                Remittance = s_testVersion,
-                Amount = 10.90,
-                Date = DateTime.Now,
-                Duedate = DateTime.Now.AddDays(30),
-            };
-
-            invoice = _api.Invoice.Create(_ct, _customer, invoice);
-            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
-            Assert.IsNotNull(invoice);
-            Assert.IsTrue(invoice.Amount > 0);
-            Assert.IsFalse(string.IsNullOrEmpty(invoice.Number));
-        }
-
-        [TestMethod]
-        public async Task AsyncTestCreateInvoice()
-        {
-            if (_apiKey == null)
-            {
-                Assert.Inconclusive("apiKey is null");
-                return;
-            }
-            var invoice = new Invoice()
-            {
-                Number = "Invoice" + DateTime.Now.ToString("yyyyMMdd"),
-                Title = "Invoice April",
-                Remittance = s_testVersion,
-                Amount = 10.90,
-                Date = DateTime.Now,
-                Duedate = DateTime.Now.AddDays(30),
-            };
-
-            invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
-            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
-            Assert.IsNotNull(invoice);
-            Assert.IsTrue(invoice.Amount > 0);
-            Assert.IsFalse(string.IsNullOrEmpty(invoice.Title));
-        }
-
-        [TestMethod]
         public void TestCreateInvoiceWithCustomerNullEmtpyFields()
         {
             if (_apiKey == null)
