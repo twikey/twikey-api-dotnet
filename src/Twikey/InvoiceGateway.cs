@@ -163,5 +163,37 @@ namespace Twikey
                 throw new TwikeyClient.UserException(apiError);
             }
         }
+
+        /// <inheritdoc cref="PdfAsync(string)"/>
+        public Stream Pdf(string invoiceId)
+        {
+            return PdfAsync(invoiceId).Result;
+        }
+
+        /// <summary>
+        /// Retrieve PDF of an invoice
+        /// </summary>
+        /// <param name="invoiceId">UUID of the invoice</param>
+        /// <returns>Stream of the PDF document</returns>
+        /// <exception cref="TwikeyClient.UserException"></exception>
+        public async Task<Stream> PdfAsync(string invoiceId)
+        {
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl($"/invoice/{invoiceId}/pdf");
+            request.Method = HttpMethod.Get;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return await response.Content.ReadAsStreamAsync();
+            }
+            else
+            {
+                var apiError = response.Headers.GetValues("ApiError").FirstOrDefault();
+                throw new TwikeyClient.UserException(apiError);
+            }
+        }
     }
 }

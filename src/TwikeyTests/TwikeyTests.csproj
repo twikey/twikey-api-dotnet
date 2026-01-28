@@ -16,4 +16,10 @@
     <ProjectReference Include="..\Twikey\Twikey.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestResources\empty.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
