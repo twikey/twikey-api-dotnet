@@ -66,6 +66,66 @@ and configure your API key which you can find in the [Twikey merchant interface]
 TwikeyClient twikeyClient = new TwikeyClient(apiKey).WithUserAgent("myApp");
 ``` 
 
+When integrating in an ASP.NET Core application or any application that already manages `HttpClient` instances,
+prefer the overload that accepts an existing `HttpClient`:
+
+```csharp
+using var httpClient = new HttpClient();
+TwikeyClient twikeyClient = new TwikeyClient(apiKey, httpClient).WithUserAgent("myApp");
+```
+
+The passed `HttpClient` remains owned by the caller and can be created through `IHttpClientFactory`.
+
+### ASP.NET Core dependency injection
+
+To make `TwikeyClient` injectable, register it through `IHttpClientFactory` and configure handlers/policies on that named client.
+
+```csharp
+public static class TwikeyServiceCollectionExtensions
+{
+    public const string DefaultHttpClientName = "Twikey.TwikeyClient";
+
+    public static IHttpClientBuilder AddTwikeyClient(this IServiceCollection services, string apiKey, bool useTestEnvironment, string userAgent, string privateKey)
+    {
+        var builder = services.AddHttpClient(DefaultHttpClientName);
+
+        services.AddScoped(serviceProvider =>
+        {
+            var httpClient = serviceProvider
+                .GetRequiredService<IHttpClientFactory>()
+                .CreateClient(DefaultHttpClientName);
+
+            return new TwikeyClient(apiKey, httpClient, useTestEnvironment)
+                .WithUserAgent(userAgent)
+                .WithPrivateKey(privateKey)
+        });
+
+        return builder;
+    }
+}
+```
+
+```csharp
+services
+    .AddTwikeyClient(configuration["Twikey:ApiKey"], useTestEnvironment: false, userAgent: "myApp", privateKey: configuration["Twikey:PrivateKey"])
+    .AddHttpMessageHandler<MyDelegatingHandler>()
+    .AddPolicyHandler(GetRetryPolicy());
+```
+
+Then inject `TwikeyClient` where needed:
+
+```csharp
+public sealed class BillingService
+{
+    private readonly TwikeyClient _twikeyClient;
+
+    public BillingService(TwikeyClient twikeyClient)
+    {
+        _twikeyClient = twikeyClient;
+    }
+}
+```
+
 ## Documents
 
 Invite a customer to sign a SEPA mandate using a specific behaviour template (ct) that allows you to configure 
@@ -245,7 +305,7 @@ API Documentation is available in English.
 ## Want to help us make our API client even better? ##
 
 Want to help us make our API client even better? We
-take [pull requests](https://github.com/twikey/twikey-api-python/pulls). 
+take [pull requests](https://github.com/twikey/twikey-api-dotnet/pulls). 
 
 ## Support ##
 
