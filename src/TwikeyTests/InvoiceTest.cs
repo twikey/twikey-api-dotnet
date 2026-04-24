@@ -53,7 +53,10 @@ namespace TwikeyAPITests
                 Street = "Derbystraat 43",
                 City = "Gent",
                 Zip = "9000",
-                Mobile = null
+                Mobile = null,
+                CompanyName = "Test company",
+                Coc = "0588759019",
+                VatNo = "be0588759019"
             };
             var invoice = new Invoice()
             {
@@ -87,7 +90,10 @@ namespace TwikeyAPITests
                 Street = "Derbystraat 43",
                 City = "Gent",
                 Zip = "9000",
-                Mobile = null
+                Mobile = null,
+                CompanyName = "Test company",
+                Coc = "0588759019",
+                VatNo = "be0588759019"
             };
             var invoice = new Invoice()
             {

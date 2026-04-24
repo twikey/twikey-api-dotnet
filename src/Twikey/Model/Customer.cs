@@ -51,6 +51,10 @@ namespace Twikey.Model
         [JsonPropertyName("coc")]
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string Coc { get; set; }
+        
+        [JsonPropertyName("vatno")]
+        [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public string VatNo { get; set; }
 
         public Customer() { }
     }
