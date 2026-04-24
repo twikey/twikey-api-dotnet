@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.IO;
 using Twikey;
 using Twikey.Model;
 using System.Threading.Tasks;
@@ -37,56 +38,6 @@ namespace TwikeyAPITests
         }
 
         [TestMethod]
-        public void TestCreateInvoice()
-        {
-            if (_apiKey == null)
-            {
-                Assert.Inconclusive("apiKey is null");
-                return;
-            }
-            var invoice = new Invoice()
-            {
-                Number = "Invoice"+DateTime.Now.ToString("yyyyMMdd"),
-                Title = "Invoice April",
-                Remittance = s_testVersion,
-                Amount = 10.90,
-                Date = DateTime.Now,
-                Duedate = DateTime.Now.AddDays(30),
-            };
-
-            invoice = _api.Invoice.Create(_ct, _customer, invoice);
-            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
-            Assert.IsNotNull(invoice);
-            Assert.IsTrue(invoice.Amount > 0);
-            Assert.IsFalse(string.IsNullOrEmpty(invoice.Number));
-        }
-
-        [TestMethod]
-        public async Task AsyncTestCreateInvoice()
-        {
-            if (_apiKey == null)
-            {
-                Assert.Inconclusive("apiKey is null");
-                return;
-            }
-            var invoice = new Invoice()
-            {
-                Number = "Invoice" + DateTime.Now.ToString("yyyyMMdd"),
-                Title = "Invoice April",
-                Remittance = s_testVersion,
-                Amount = 10.90,
-                Date = DateTime.Now,
-                Duedate = DateTime.Now.AddDays(30),
-            };
-
-            invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
-            // Console.WriteLine("New invoice: " + JsonSerializer.Serialize(invoice, new JsonSerializerOptions{WriteIndented = true}));
-            Assert.IsNotNull(invoice);
-            Assert.IsTrue(invoice.Amount > 0);
-            Assert.IsFalse(string.IsNullOrEmpty(invoice.Title));
-        }
-
-        [TestMethod]
         public void TestCreateInvoiceWithCustomerNullEmtpyFields()
         {
             if (_apiKey == null)
@@ -102,7 +53,10 @@ namespace TwikeyAPITests
                 Street = "Derbystraat 43",
                 City = "Gent",
                 Zip = "9000",
-                Mobile = null
+                Mobile = null,
+                CompanyName = "Test company",
+                Coc = "0588759019",
+                VatNo = "be0588759019"
             };
             var invoice = new Invoice()
             {
@@ -136,7 +90,10 @@ namespace TwikeyAPITests
                 Street = "Derbystraat 43",
                 City = "Gent",
                 Zip = "9000",
-                Mobile = null
+                Mobile = null,
+                CompanyName = "Test company",
+                Coc = "0588759019",
+                VatNo = "be0588759019"
             };
             var invoice = new Invoice()
             {
@@ -192,6 +149,64 @@ namespace TwikeyAPITests
                 Assert.IsNotNull(payment);
                 Assert.IsFalse(string.IsNullOrEmpty(payment.EventId));
             }
+        }
+
+        [TestMethod]
+        public void GetInvoicePdf()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var invoice = new Invoice()
+            {
+                Number = "InvoicePdf" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+                Title = "Invoice with PDF",
+                Remittance = s_testVersion,
+                Amount = 10.90,
+                Date = DateTime.Now,
+                Duedate = DateTime.Now.AddDays(30),
+                Pdf = File.ReadAllBytes("TestResources/empty.pdf")
+            };
+
+            invoice = _api.Invoice.Create(_ct, _customer, invoice);
+            Assert.IsNotNull(invoice);
+            Assert.IsFalse(string.IsNullOrEmpty(invoice.Id));
+
+            var pdfStream = _api.Invoice.Pdf(invoice.Id);
+            Assert.IsNotNull(pdfStream);
+            Assert.IsTrue(pdfStream.Length > 0);
+        }
+
+        [TestMethod]
+        public async Task AsyncGetInvoicePdf()
+        {
+            if (_apiKey == null)
+            {
+                Assert.Inconclusive("apiKey is null");
+                return;
+            }
+
+            var invoice = new Invoice()
+            {
+                Number = "InvoicePdf" + DateTime.Now.ToString("yyyyMMddHHmmss"),
+                Title = "Invoice with PDF",
+                Remittance = s_testVersion,
+                Amount = 10.90,
+                Date = DateTime.Now,
+                Duedate = DateTime.Now.AddDays(30),
+                Pdf = File.ReadAllBytes("TestResources/empty.pdf")
+            };
+
+            invoice = await _api.Invoice.CreateAsync(_ct, _customer, invoice);
+            Assert.IsNotNull(invoice);
+            Assert.IsFalse(string.IsNullOrEmpty(invoice.Id));
+
+            var pdfStream = await _api.Invoice.PdfAsync(invoice.Id);
+            Assert.IsNotNull(pdfStream);
+            Assert.IsTrue(pdfStream.Length > 0);
         }
     }
 }
