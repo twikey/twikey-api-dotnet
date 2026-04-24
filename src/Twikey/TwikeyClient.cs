@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Web;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -17,10 +16,11 @@ namespace Twikey
         private static readonly string s_prodEnvironment = "https://api.twikey.com/creditor";
         private static readonly string s_testEnvironment = "https://api.beta.twikey.com/creditor";
         private static readonly long s_maxSessionAge = 23 * 60 * 60 * 1000; // max 1day, but use 23 to be safe
-        private static readonly HttpClient s_client = new HttpClient();
+        private static readonly Lazy<HttpClient> s_defaultHttpClient = new(() => new HttpClient());
         private static readonly string s_saltOwn = "own";
         private readonly string _apiKey;
         private readonly string _endpoint;
+        private readonly HttpClient _injectedHttpClient;
         private long _lastLogin;
         private string _sessionToken;
         private string _privateKey;
@@ -35,9 +35,17 @@ namespace Twikey
 
         /// <param name="apiKey">API key</param>
         /// <param name="test">Use the test environment</param>
-        public TwikeyClient(string apiKey, bool test)
+        public TwikeyClient(string apiKey, bool test = false)
+            : this(apiKey, s_defaultHttpClient.Value, test)
+        { }
+
+        /// <param name="apiKey">API key</param>
+        /// <param name="httpClient">HTTP client to use for all requests. The caller owns its lifetime.</param>
+        /// <param name="test">Use the test environment</param>
+        public TwikeyClient(string apiKey, HttpClient httpClient, bool test = false)
         {
             _apiKey = apiKey;
+            _injectedHttpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _endpoint = test ? s_testEnvironment : s_prodEnvironment;
             UserAgent = s_defaultUserHeader;
             Document = new DocumentGateway(this);
@@ -45,9 +53,6 @@ namespace Twikey
             Paylink = new PaylinkGateway(this);
             Transaction = new TransactionGateway(this);
         }
-
-        /// <param name="apiKey"> API key</param>
-        public TwikeyClient(string apikey) : this(apikey, false) { }
 
         public TwikeyClient WithUserAgent(string userAgent)
         {
@@ -79,7 +84,7 @@ namespace Twikey
                 }
                 request.Content = new FormUrlEncodedContent(parameters);
 
-                HttpResponseMessage response = await s_client.SendAsync(request);
+                HttpResponseMessage response = await _injectedHttpClient.SendAsync(request);
                 try
                 {
                     _sessionToken = response.Headers.GetValues("Authorization").First<string>();
@@ -240,7 +245,7 @@ namespace Twikey
 
         public async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request)
         {
-            return await s_client.SendAsync(request);
+            return await _injectedHttpClient.SendAsync(request);
         }
     }
 
