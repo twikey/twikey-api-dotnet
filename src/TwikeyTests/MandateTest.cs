@@ -198,7 +198,10 @@ namespace TwikeyAPITests
             foreach(var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -216,7 +219,10 @@ namespace TwikeyAPITests
             foreach (var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -233,7 +239,10 @@ namespace TwikeyAPITests
             foreach(var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -251,7 +260,10 @@ namespace TwikeyAPITests
             foreach (var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -269,7 +281,10 @@ namespace TwikeyAPITests
             foreach(var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
@@ -288,7 +303,10 @@ namespace TwikeyAPITests
             foreach (var mandateUpdate in feed)
             {
                 Assert.IsNotNull(mandateUpdate);
-                Assert.IsNotNull(mandateUpdate.Mandate);
+                if (mandateUpdate.IsCancelled())
+                    Assert.IsNotNull(mandateUpdate.OriginalMandateId);
+                else
+                    Assert.IsNotNull(mandateUpdate.Mandate);
             }
         }
 
