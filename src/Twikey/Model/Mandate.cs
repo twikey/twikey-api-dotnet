@@ -100,6 +100,29 @@ namespace Twikey.Model
         /// Always start with the registration page, even with all known mandate details
         /// </summary>
         public bool RequireValidation { get; set; }
+        /// <summary>
+        /// Optional free-form custom attributes to include in the request (e.g. user-defined fields specific to your integration)
+        /// </summary>
+        public Dictionary<string, string> Attributes { get; set; }
+    }
+
+    public class SignRequest : MandateRequest
+    {
+        public SignRequest(long ct) : base(ct) { }
+        public SignRequest(string tc) : base(tc) { }
+
+        /// <summary>Signature method: sms, digisign, import, itsme, emachtiging, paper, auto</summary>
+        public string Method { get; set; }
+        /// <summary>Wet signature as base64 PNG (max 150KB), required for digisign method</summary>
+        public string DigSig { get; set; }
+        /// <summary>Shortcode from invite URL to sign a prepared mandate</summary>
+        public string Key { get; set; }
+        /// <summary>Date of signature in ISO8601 format (e.g. 2025-12-31)</summary>
+        public DateTime? SignDate { get; set; }
+        /// <summary>Location of signature</summary>
+        public string Place { get; set; }
+        /// <summary>B2B only: set to false to require bank validation</summary>
+        public bool? BankSignature { get; set; }
     }
 
     public class SignableMandate

@@ -19,7 +19,7 @@ namespace Twikey
         private static readonly Lazy<HttpClient> s_defaultHttpClient = new(() => new HttpClient());
         private static readonly string s_saltOwn = "own";
         private readonly string _apiKey;
-        private readonly string _endpoint;
+        private string _endpoint;
         private readonly HttpClient _injectedHttpClient;
         private long _lastLogin;
         private string _sessionToken;
@@ -58,6 +58,12 @@ namespace Twikey
         {
             UserAgent = userAgent;
             //s_client.DefaultRequestHeaders.Add("User-Agent",userAgent);
+            return this;
+        }
+
+        public TwikeyClient WithEndpoint(string endpoint)
+        {
+            _endpoint = endpoint;
             return this;
         }
 

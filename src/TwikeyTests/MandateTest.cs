@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Collections.Generic;
 using Twikey;
 using Twikey.Model;
 using System.Threading.Tasks;
@@ -13,6 +14,8 @@ namespace TwikeyAPITests
         private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
         private static readonly string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
         private static readonly long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
+        private static readonly long _ctWik = Environment.GetEnvironmentVariable("CT_WIK") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT_WIK")); // WIK template ct
+        private static readonly long _ctRcc = Environment.GetEnvironmentVariable("CT_RCC") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT_RCC")); // RCC template ct
         private static readonly string _mandateNumber = Environment.GetEnvironmentVariable("MNDTNUMBER");
         private static Customer _customer;
         private static TwikeyClient _api;
@@ -33,7 +36,9 @@ namespace TwikeyAPITests
                 Lang = "nl",
                 Mobile = "32498665995"
             };
+            var url = Environment.GetEnvironmentVariable("TWIKEY_URL");
             _api = new TwikeyClient(_apiKey, true).WithUserAgent("twikey-api-dotnet/msunit");
+            if (url != null) _api.WithEndpoint(url);
 
         }
 
@@ -141,6 +146,45 @@ namespace TwikeyAPITests
             Assert.IsFalse(string.IsNullOrEmpty(signableMandate.MandateNumber));
         }
 
+        private static void ImportSignedMandate()
+        {
+            if (_ct == 0) { Assert.Inconclusive("CT not set"); return; }
+            _api.Document.Sign(_customer, new SignRequest(_ct)
+            {
+                Method = "import",
+                MandateNumber = "IMPORT-" + Guid.NewGuid().ToString("N")[..12].ToUpper(),
+                Iban = "BE16645348971174",
+                SignDate = DateTime.Today,
+                Place = "Gent"
+            });
+        }
+
+        private static void ImportSignedCreditCard()
+        {
+            if (_ctRcc == 0) { Assert.Inconclusive("CT_RCC not set"); return; }
+            _api.Document.Sign(_customer, new SignRequest(_ctRcc)
+            {
+                Method = "import",
+                MandateNumber = "IMPORT-RCC-" + Guid.NewGuid().ToString("N")[..12].ToUpper(),
+                Amount = "1",
+                SignDate = DateTime.Today,
+                Place = "Gent",
+                Attributes = new Dictionary<string, string>
+                {
+                    { "_psptoken", "test-psp-token" },
+                    { "_expiry", "2026-12-31" },
+                    { "_last", "9999" },
+                    { "_cust", "cst_CfC9qgHKwt" }
+                }
+            });
+        }
+
+        private static void ImportSignedWik()
+        {
+            if (_ctWik == 0) { Assert.Inconclusive("CT_WIK not set"); return; }
+            _api.Document.Sign(_customer, new SignRequest(_ctWik) { Method = "import", SignDate = DateTime.Today });
+        }
+
         [TestMethod]
         public void GetMandatesAndDetails(){
             if (_apiKey == null)
@@ -148,6 +192,7 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedMandate();
             var feed = _api.Document.Feed();
             Assert.IsNotNull(feed);
             foreach(var mandateUpdate in feed)
@@ -165,6 +210,7 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedMandate();
             var feed = await _api.Document.FeedAsync();
             Assert.IsNotNull(feed);
             foreach (var mandateUpdate in feed)
@@ -181,6 +227,7 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedCreditCard();
             var feed = _api.Document.Feed("CREDITCARD");
             Assert.IsNotNull(feed);
             foreach(var mandateUpdate in feed)
@@ -198,6 +245,7 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedCreditCard();
             var feed = await _api.Document.FeedAsync("CREDITCARD");
             Assert.IsNotNull(feed);
             foreach (var mandateUpdate in feed)
@@ -214,6 +262,8 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedCreditCard();
+            ImportSignedWik();
             var feed = _api.Document.Feed("CREDITCARD", "WIK");
             Assert.IsNotNull(feed);
             foreach(var mandateUpdate in feed)
@@ -231,6 +281,8 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
+            ImportSignedCreditCard();
+            ImportSignedWik();
             var feed = await _api.Document.FeedAsync("CREDITCARD", "WIK");
             Assert.IsNotNull(feed);
             foreach (var mandateUpdate in feed)
