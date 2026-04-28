@@ -11,7 +11,7 @@ namespace TwikeyAPITests
     {
         private static readonly string s_testVersion = "twikey-test/.net-0.1.0";
         private static readonly string _apiKey = Environment.GetEnvironmentVariable("TWIKEY_API_KEY"); // found in https://www.twikey.com/r/admin#/c/settings/api
-        private static readonly long _ct = Environment.GetEnvironmentVariable("CT") == null ? 0L : Convert.ToInt64(Environment.GetEnvironmentVariable("CT")); // found @ https://www.twikey.com/r/admin#/c/template
+        private static readonly long _ct = long.TryParse(Environment.GetEnvironmentVariable("CT"), out var ct) ? ct : 0L; // found @ https://www.twikey.com/r/admin#/c/template
         private static readonly string _mandateNumber = Environment.GetEnvironmentVariable("MNDTNUMBER");
         private static Customer _customer;
         private static TwikeyClient _api;
