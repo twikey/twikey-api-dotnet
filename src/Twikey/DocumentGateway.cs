@@ -46,6 +46,9 @@ namespace Twikey
             AddIfExists(parameters,"amount", mandaterequest.Amount);
             AddIfExists(parameters,"token", mandaterequest.Token);
             AddIfExists(parameters,"requireValidation", mandaterequest.RequireValidation.ToString());
+            if (mandaterequest.Attributes != null)
+                foreach (var attr in mandaterequest.Attributes)
+                    parameters[attr.Key] = attr.Value;
 
             if (customer != null)
             {
@@ -84,6 +87,91 @@ namespace Twikey
             string apiError = response.Headers.GetValues("ApiError").First();
             throw new TwikeyClient.UserException(apiError);
 
+        }
+
+        /// <inheritdoc cref="SignAsync(Customer,SignRequest)"/>
+        public SignableMandate Sign(Customer customer, SignRequest signRequest)
+        {
+            return SignAsync(customer, signRequest).Result;
+        }
+
+        /// <summary>Import an already-signed agreement or bypass standard Twikey signing screens for deeper
+        /// flow control (e.g. digisign, itsme, eMachtiging). Use this only when the regular invite flow
+        /// is not suitable, these flows must be validated by Twikey support upfront and may incur additional
+        /// costs depending on the method used. For standard customer signing, use
+        /// <see cref="CreateAsync(Customer,MandateRequest)"/> instead.
+        /// <para>See <see href="https://www.twikey.com/developers/api-flows.html#mandates-and-tokens">Twikey API flows</see>
+        /// for more information on the difference between invite and sign.</para></summary>
+        /// <param name="customer">Customer details</param>
+        /// <param name="signRequest">SignRequest containing invite parameters plus the signature method and details</param>
+        /// <exception cref="IOException">When no connection could be made</exception>
+        /// <exception cref="TwikeyClient.UserException">When Twikey returns a user error (400)</exception>
+        /// <returns>The signed mandate</returns>
+        public async Task<SignableMandate> SignAsync(Customer customer, SignRequest signRequest)
+        {
+            var parameters = new Dictionary<string, string>();
+            AddIfExists(parameters, "ct", signRequest.Ct);
+            AddIfExists(parameters, "tc", signRequest.Tc);
+            AddIfExists(parameters, "iban", signRequest.Iban);
+            AddIfExists(parameters, "bic", signRequest.Bic);
+            AddIfExists(parameters, "mandateNumber", signRequest.MandateNumber);
+            AddIfExists(parameters, "contractNumber", signRequest.ContractNumber);
+            AddIfExists(parameters, "campaign", signRequest.Campaign);
+            AddIfExists(parameters, "prefix", signRequest.Prefix);
+            AddIfExists(parameters, "check", signRequest.Check);
+            AddIfExists(parameters, "reminderDays", signRequest.ReminderDays);
+            AddIfExists(parameters, "sendInvite", signRequest.SendInvite);
+            AddIfExists(parameters, "document", signRequest.Document);
+            AddIfExists(parameters, "amount", signRequest.Amount);
+            AddIfExists(parameters, "token", signRequest.Token);
+            AddIfExists(parameters, "requireValidation", signRequest.RequireValidation.ToString());
+            AddIfExists(parameters, "method", signRequest.Method);
+            AddIfExists(parameters, "digsig", signRequest.DigSig);
+            AddIfExists(parameters, "key", signRequest.Key);
+            if (signRequest.SignDate.HasValue)
+                parameters["signDate"] = signRequest.SignDate.Value.ToString("yyyy-MM-dd");
+            AddIfExists(parameters, "place", signRequest.Place);
+            if (signRequest.BankSignature.HasValue)
+                parameters["bankSignature"] = signRequest.BankSignature.Value.ToString().ToLower();
+            if (signRequest.Attributes != null)
+                foreach (var attr in signRequest.Attributes)
+                    parameters[attr.Key] = attr.Value;
+
+            if (customer != null)
+            {
+                AddIfExists(parameters, "customerNumber", customer.CustomerNumber);
+                AddIfExists(parameters, "email", customer.Email);
+                AddIfExists(parameters, "firstname", customer.Firstname);
+                AddIfExists(parameters, "lastname", customer.Lastname);
+                AddIfExists(parameters, "l", customer.Lang);
+                AddIfExists(parameters, "address", customer.Street);
+                AddIfExists(parameters, "city", customer.City);
+                AddIfExists(parameters, "zip", customer.Zip);
+                AddIfExists(parameters, "country", customer.Country);
+                AddIfExists(parameters, "mobile", customer.Mobile);
+                if (customer.CompanyName != null)
+                {
+                    AddIfExists(parameters, "companyName", customer.CompanyName);
+                    AddIfExists(parameters, "coc", customer.Coc);
+                }
+            }
+
+            HttpRequestMessage request = new HttpRequestMessage();
+            request.RequestUri = _twikeyClient.GetUrl("/sign");
+            request.Method = HttpMethod.Post;
+            request.Headers.Add("User-Agent", _twikeyClient.UserAgent);
+            request.Headers.Add("Authorization", await _twikeyClient.GetSessionToken());
+            request.Content = new FormUrlEncodedContent(parameters);
+
+            HttpResponseMessage response = await _twikeyClient.SendAsync(request);
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                var responseString = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<SignableMandate>(responseString, JsonOptions)!;
+            }
+
+            string apiError = response.Headers.GetValues("ApiError").First();
+            throw new TwikeyClient.UserException(apiError);
         }
 
         ///<inheritdoc cref="FeedAsync(string[])"/>

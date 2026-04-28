@@ -33,7 +33,9 @@ namespace TwikeyAPITests
                 Lang = "nl",
                 Mobile = "32498665995"
             };
+            var url = Environment.GetEnvironmentVariable("TWIKEY_URL");
             _api = new TwikeyClient(_apiKey, true).WithUserAgent("twikey-api-dotnet/msunit");
+            if (url != null) _api.WithEndpoint(url);
 
         }
 
