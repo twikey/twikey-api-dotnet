@@ -28,4 +28,6 @@ jobs:
       env: 
         TWIKEY_API_KEY: ${{ secrets.TWIKEY_API_KEY }}
         CT: ${{ secrets.CT }}
+        CT_WIK: ${{ secrets.CT_WIK }}
+        CT_RCC: ${{ secrets.CT_RCC }}
         mndtNumber: ${{ secrets.mndtNumber }}
