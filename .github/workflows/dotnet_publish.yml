@@ -22,9 +22,9 @@ jobs:
       run: dotnet restore src/Twikey && dotnet restore src/TwikeyTests
 
     - name: Build
-      run: dotnet build src/Twikey --no-restore -c Release && dotnet build src/TwikeyTests --no-restore
+      run: dotnet build src/Twikey --no-restore -c Release -p:Version=${GITHUB_REF_NAME#v} && dotnet build src/TwikeyTests --no-restore
 
     - name: Publish
-      run: (tmpDir=$(mktemp -d) && dotnet pack --no-build -c Release src/Twikey --output $tmpDir && dotnet nuget push "$tmpDir/$(ls $tmpDir)" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json); rm -rf $tmpDir
+      run: (tmpDir=$(mktemp -d) && dotnet pack --no-build -c Release -p:Version=${GITHUB_REF_NAME#v} src/Twikey --output $tmpDir && dotnet nuget push "$tmpDir/$(ls $tmpDir)" --api-key $NUGET_API_KEY --source https://api.nuget.org/v3/index.json); rm -rf $tmpDir
       env:
         NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
