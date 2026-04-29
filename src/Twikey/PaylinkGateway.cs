@@ -54,6 +54,7 @@ namespace Twikey
                 AddIfExists(parameters,"zip", customer.Zip);
                 AddIfExists(parameters,"country", customer.Country);
                 AddIfExists(parameters,"mobile", customer.Mobile);
+                AddIfExists(parameters, "vatno", customer.VatNo);
 
                 if (customer.CompanyName != null)
                 {
