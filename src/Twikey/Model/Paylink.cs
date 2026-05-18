@@ -36,7 +36,7 @@ namespace Twikey.Model
         public string? Url { get; set; }
 
         [JsonPropertyName("ct")]
-        public string? ContractTemplate { get; set; }
+        public long ContractTemplate { get; set; }
 
         public bool IsPaid()
         {

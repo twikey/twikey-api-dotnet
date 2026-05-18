@@ -1,5 +1,6 @@
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
+using System.Linq;
 using Twikey;
 using Twikey.Model;
 using System.Threading.Tasks;
@@ -144,8 +145,16 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            var links = _api.Paylink.Feed();
-            Assert.IsNotNull(links);
+
+            var request = new PaylinkRequest("Your payment", 10.55)
+            {
+                Remittance = s_testVersion,
+                Ct = _ct,
+            };
+            _api.Paylink.Create(_customer, request);
+
+            var links = _api.Paylink.Feed(all: true).ToList();
+            Assert.IsTrue(links.Count > 0, "feed should contain the paylink that was just created");
             foreach(var link in links)
             {
                 Assert.IsNotNull(link);
@@ -161,8 +170,16 @@ namespace TwikeyAPITests
                 Assert.Inconclusive("apiKey is null");
                 return;
             }
-            var links = await _api.Paylink.FeedAsync();
-            Assert.IsNotNull(links);
+
+            var request = new PaylinkRequest("Your payment", 10.55)
+            {
+                Remittance = s_testVersion,
+                Ct = _ct,
+            };
+            await _api.Paylink.CreateAsync(_customer, request);
+
+            var links = (await _api.Paylink.FeedAsync(all: true)).ToList();
+            Assert.IsTrue(links.Count > 0, "feed should contain the paylink that was just created");
             foreach (var link in links)
             {
                 Assert.IsNotNull(link);

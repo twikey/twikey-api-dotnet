@@ -86,15 +86,16 @@ namespace Twikey
         }
 
         /// Get updates about all links
-        /// <param name="paylinkCallback">Callback for every change</param>
+        /// <param name="all">When true, include all non-paid updates too; by default only paid updates are returned</param>
+        /// <param name="sideloads">Optional include values (customer, meta, time, refunds)</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public IEnumerable<Paylink> Feed(params string[] sideloads)
+        public IEnumerable<Paylink> Feed(bool all = false, params string[] sideloads)
         {
             bool isEmpty;
             do
             {
-                var links = FeedAsync(sideloads).Result;
+                var links = FeedAsync(all, sideloads).Result;
 
                 foreach(var link in links)
                 {
@@ -106,16 +107,29 @@ namespace Twikey
 
 
         /// Get updates about all links
-        /// <param name="paylinkCallback">Callback for every change</param>
+        /// <param name="all">When true, include all non-paid updates too; by default only paid updates are returned</param>
+        /// <param name="sideloads">Optional include values (customer, meta, time, refunds)</param>
         /// <exception cref="IOException">When a network issue happened</exception>
         /// <exception cref="Twikey.TwikeyClient.UserException">When there was an issue while retrieving the mandates (eg. invalid apikey)</exception>
-        public async Task<IEnumerable<Paylink>> FeedAsync(params string[] sideloads)
+        public async Task<IEnumerable<Paylink>> FeedAsync(bool all = false, params string[] sideloads)
         {
-            string url = "/payment/link/feed";
-            if(sideloads != null && sideloads.Length != 0)
+            var query = new List<string>();
+            if (all)
             {
-                var extra = Array.ConvertAll(sideloads, sideload => "include="+sideload.ToString());
-                url += "?" + string.Join("&",extra);
+                query.Add("all=true");
+            }
+            if (sideloads != null)
+            {
+                foreach (var sideload in sideloads)
+                {
+                    query.Add("include=" + sideload);
+                }
+            }
+
+            string url = "/payment/link/feed";
+            if (query.Count != 0)
+            {
+                url += "?" + string.Join("&", query);
             }
 
             Uri myUrl = _twikeyClient.GetUrl(url);
